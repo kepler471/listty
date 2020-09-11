@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
+
+type page item
 
 type item struct {
 	Home   bool
@@ -14,7 +18,7 @@ type item struct {
 
 func main() {
 
-	house := item{
+	house := page{
 		Home:   true,
 		Parent: nil,
 		Head:   "papa",
@@ -45,16 +49,42 @@ func createItem(parent *item) {
 }
 
 func moveUp(person *item) {
-	for n, i := range person.Parent.Tail {
-		if &i == person {
-			x := person.Parent.Tail[n-1]
-			person.Parent.Tail[n-1] = i
-			person.Parent.Tail[n] = x
-		}
+	if &person.Parent.Tail[0] == person {
+		return
 	}
 
+	for n, i := range person.Parent.Tail {
+		if &i == person {
+			swapItem(person.Parent.Tail, &i, n, n-1)
+		}
+	}
 }
-func moveUp() {
+
+func moveDown(person *item) {
+	if &person.Parent.Tail[len(person.Parent.Tail)-1] == person {
+		return
+	}
+
+	for n, i := range person.Parent.Tail {
+		if &i == person {
+			swapItem(person.Parent.Tail, &i, n, n+1)
+		}
+	}
+}
+
+func swapItem(items []item, i *item, currentPosition int, newPosition int) {
+	x := items[newPosition]
+	items[newPosition] = *i
+	items[currentPosition] = x
+}
+
+func removeChild(child *item, parent *item) {
+	for n, i := range parent.Tail {
+		if &i == child {
+			parent.Tail = append(parent.Tail[:n], parent.Tail[n+1:]...)
+			break
+		}
+	}
 }
 
 // moves item into the Tail of the preceeding item in the slice depth it lived in
