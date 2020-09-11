@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type page item
 
 type item struct {
@@ -11,32 +7,7 @@ type item struct {
 	Parent *item
 	Head   string
 	Tail   []item
-	//open   bool // is this Tail collapsed
 }
-
-//type line []*line
-
-func main() {
-
-	house := page{
-		Home:   true,
-		Parent: nil,
-		Head:   "papa",
-		Tail:   []item{},
-	}
-	fmt.Println(house.Head)
-}
-
-//mama := item{
-//Parent: Home,
-//Head:   "mama",
-//Tail:   nil,
-//}
-//papa := item{
-//Parent: nil,
-//Head:   "papa",
-//Tail:   nil,
-//}
 
 func createItem(parent *item) {
 	child := item{
@@ -49,33 +20,25 @@ func createItem(parent *item) {
 }
 
 func moveUp(person *item) {
-	if &person.Parent.Tail[0] == person {
-		return
-	}
-
-	for n, i := range person.Parent.Tail {
+	for n, i := range person.Parent.Tail[1:] {
 		if &i == person {
-			swapItem(person.Parent.Tail, &i, n, n-1)
+			swapItem(person.Parent.Tail, n, n-1)
+			break
 		}
 	}
 }
 
 func moveDown(person *item) {
-	if &person.Parent.Tail[len(person.Parent.Tail)-1] == person {
-		return
-	}
-
-	for n, i := range person.Parent.Tail {
+	for n, i := range person.Parent.Tail[:len(person.Parent.Tail)-1] {
 		if &i == person {
-			swapItem(person.Parent.Tail, &i, n, n+1)
+			swapItem(person.Parent.Tail, n, n+1)
+			break
 		}
 	}
 }
 
-func swapItem(items []item, i *item, currentPosition int, newPosition int) {
-	x := items[newPosition]
-	items[newPosition] = *i
-	items[currentPosition] = x
+func swapItem(items []item, current, next int) {
+	items[current], items[next] = items[next], items[current]
 }
 
 func removeChild(child *item, parent *item) {
@@ -88,20 +51,9 @@ func removeChild(child *item, parent *item) {
 }
 
 // moves item into the Tail of the preceeding item in the slice depth it lived in
-func indent(i *item) item {
-
+func indent(i *item) {
 }
 
 // places item after its Parent item, in its Parent items slice
-func unindent(i *item) item {
-
+func unindent(i *item) {
 }
-
-/*
-a
-	b
-	*
-		c
-		d
-
-*/
