@@ -9,16 +9,23 @@ type item struct {
 	Tail   []item
 }
 
-func createItem(parent *item) {
-	child := item{
-		Home:   false,
-		Parent: parent,
-		Head:   "",
-		Tail:   nil,
+// Adds a new item at the same depth as the cursor.
+// Given the cursor's selected item, createItem looks at the parent,
+// and inserts a new item into the slice `selected.Parent.Tail`, directly
+// after the current item.
+func createItem(selected *item) {
+	for n, i := range selected.Parent.Tail {
+		if &i == selected.Parent {
+			blank := item{Parent: selected.Parent}
+			selected.Parent.Tail = append(selected.Parent.Tail, blank)
+			copy(selected.Parent.Tail[n+1:], selected.Parent.Tail[n:])
+			selected.Parent.Tail[n] = blank
+			break
+		}
 	}
-	parent.Tail = append(parent.Tail, child)
 }
 
+// move an item up its parent's slice
 func moveUp(person *item) {
 	for n, i := range person.Parent.Tail[1:] {
 		if &i == person {
@@ -28,6 +35,7 @@ func moveUp(person *item) {
 	}
 }
 
+// move an item down its parent's slice
 func moveDown(person *item) {
 	for n, i := range person.Parent.Tail[:len(person.Parent.Tail)-1] {
 		if &i == person {
