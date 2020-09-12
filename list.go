@@ -9,14 +9,16 @@ type item struct {
 	Tail   []item
 }
 
-func createItem(parent *item) {
-	child := item{
-		Home:   false,
-		Parent: parent,
-		Head:   "",
-		Tail:   nil,
+func createItem(selected *item) {
+	for n, i := range selected.Parent.Tail {
+		if &i == selected.Parent {
+			blank := item{Parent: selected.Parent}
+			selected.Parent.Tail = append(selected.Parent.Tail, blank)
+			copy(selected.Parent.Tail[n+1:], selected.Parent.Tail[n:])
+			selected.Parent.Tail[n] = blank
+			break
+		}
 	}
-	parent.Tail = append(parent.Tail, child)
 }
 
 func moveUp(person *item) {
