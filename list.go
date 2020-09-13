@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type page item
 
 type item struct {
@@ -7,6 +9,13 @@ type item struct {
 	Parent *item
 	Head   string
 	Tail   []item
+}
+
+func (notes *item) Print() {
+	fmt.Println("Notes:")
+	for i := range notes.Tail {
+		fmt.Printf("\t %v\t%p\n", notes.Tail[i].Head, &notes.Tail[i])
+	}
 }
 
 func createItem(selected *item) {
@@ -43,10 +52,12 @@ func swapItem(items []item, current, next int) {
 	items[current], items[next] = items[next], items[current]
 }
 
-func removeChild(child *item, parent *item) {
-	for n := range parent.Tail {
-		if child == &child.Parent.Tail[n] {
-			parent.Tail = append(parent.Tail[:n], parent.Tail[n+1:]...)
+func removeSelected(selected *item) {
+	for n := range selected.Parent.Tail {
+		if selected == &selected.Parent.Tail[n] {
+			selected.Parent.Tail = append(
+				selected.Parent.Tail[:n],
+				selected.Parent.Tail[n+1:]...)
 			break
 		}
 	}
