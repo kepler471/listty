@@ -10,8 +10,8 @@ type item struct {
 }
 
 func createItem(selected *item) {
-	for n, i := range selected.Parent.Tail {
-		if &i == selected.Parent {
+	for n := range selected.Parent.Tail {
+		if selected == &selected.Parent.Tail[n] {
 			blank := item{Parent: selected.Parent}
 			selected.Parent.Tail = append(selected.Parent.Tail, blank)
 			copy(selected.Parent.Tail[n+1:], selected.Parent.Tail[n:])
@@ -21,19 +21,19 @@ func createItem(selected *item) {
 	}
 }
 
-func moveUp(person *item) {
-	for n, i := range person.Parent.Tail[1:] {
-		if &i == person {
-			swapItem(person.Parent.Tail, n, n-1)
+func moveUp(selected *item) {
+	for n := range selected.Parent.Tail[1:] {
+		if selected == &selected.Parent.Tail[n] {
+			swapItem(selected.Parent.Tail, n, n-1)
 			break
 		}
 	}
 }
 
-func moveDown(person *item) {
-	for n, i := range person.Parent.Tail[:len(person.Parent.Tail)-1] {
-		if &i == person {
-			swapItem(person.Parent.Tail, n, n+1)
+func moveDown(selected *item) {
+	for n := range selected.Parent.Tail[:len(selected.Parent.Tail)-1] {
+		if selected == &selected.Parent.Tail[n] {
+			swapItem(selected.Parent.Tail, n, n+1)
 			break
 		}
 	}
@@ -44,8 +44,8 @@ func swapItem(items []item, current, next int) {
 }
 
 func removeChild(child *item, parent *item) {
-	for n, i := range parent.Tail {
-		if &i == child {
+	for n := range parent.Tail {
+		if child == &child.Parent.Tail[n] {
 			parent.Tail = append(parent.Tail[:n], parent.Tail[n+1:]...)
 			break
 		}
