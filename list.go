@@ -1,8 +1,8 @@
 package main
 
-import "fmt"
-
-type page item
+import (
+	"fmt"
+)
 
 type item struct {
 	Home   bool
@@ -11,62 +11,77 @@ type item struct {
 	Tail   []item
 }
 
-func (notes *item) Print() {
+func (i *item) Print() {
 	fmt.Println("Notes:")
-	for i := range notes.Tail {
-		fmt.Printf("\t %v\t%p\n", notes.Tail[i].Head, &notes.Tail[i])
+	for n := range i.Tail {
+		fmt.Printf("\t %v\t%p\n", i.Tail[n].Head, &i.Tail[n])
 	}
 }
 
-func createItem(selected *item) {
-	for n := range selected.Parent.Tail {
-		if selected == &selected.Parent.Tail[n] {
-			blank := item{Parent: selected.Parent}
-			selected.Parent.Tail = append(selected.Parent.Tail, blank)
-			copy(selected.Parent.Tail[n+1:], selected.Parent.Tail[n:])
-			selected.Parent.Tail[n] = blank
-			break
+func (i *item) StringChildren() (s string) {
+	for index := range i.Tail {
+		s += i.Tail[index].Head + "\t"
+	}
+	return s
+}
+
+// Locate returns the index value for the selected item, within its parent's tail
+func (i *item) Locate() (index int) {
+	for index = range i.Parent.Tail {
+		if i == &i.Parent.Tail[index] {
+			return
 		}
 	}
+	return
 }
 
-func moveUp(selected *item) {
-	for n := range selected.Parent.Tail[1:] {
-		if selected == &selected.Parent.Tail[n] {
-			swapItem(selected.Parent.Tail, n, n-1)
-			break
-		}
+func (i *item) InsertAt(tail []item, index int) {
+	tail = append(tail, *i)
+	copy(tail[index+1:], tail[index:])
+	tail[index] = *i
+}
+
+func (i *item) Remove() {
+	index := i.Locate()
+	i.Parent.Tail = append(i.Parent.Tail[:index], i.Parent.Tail[index+1:]...)
+}
+
+func (i *item) MoveUp() {
+	index := i.Locate()
+	if index == 0 {
+		return
 	}
+	swapItem(i.Parent.Tail, index, index-1)
 }
 
-func moveDown(selected *item) {
-	for n := range selected.Parent.Tail[:len(selected.Parent.Tail)-1] {
-		if selected == &selected.Parent.Tail[n] {
-			swapItem(selected.Parent.Tail, n, n+1)
-			break
-		}
+func (i *item) MoveDown() {
+	index := i.Locate()
+	if index == len(i.Parent.Tail)-1 {
+		return
 	}
+	swapItem(i.Parent.Tail, index, index+1)
 }
 
-func swapItem(items []item, current, next int) {
-	items[current], items[next] = items[next], items[current]
+// Indent moves the item to the end of the preceding item's tail
+func (i *item) Indent() {
+	index := i.Locate()
+	i.Remove()
+	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, *i)
 }
 
-func removeSelected(selected *item) {
-	for n := range selected.Parent.Tail {
-		if selected == &selected.Parent.Tail[n] {
-			selected.Parent.Tail = append(
-				selected.Parent.Tail[:n],
-				selected.Parent.Tail[n+1:]...)
-			break
-		}
-	}
+// Unindent moves an item after its Parent item, in its Parent slice
+func (i *item) Unindent() {
+	i.Remove()
+	index := i.Parent.Locate()
+	i.InsertAt(i.Parent.Parent.Tail, index+1)
 }
 
-// moves item into the Tail of the preceeding item in the slice depth it lived in
-func indent(i *item) {
+func newItem(i *item) {
+	index := i.Locate()
+	blank := item{Parent: i.Parent}
+	blank.InsertAt(i.Parent.Tail, index+1)
 }
 
-// places item after its Parent item, in its Parent items slice
-func unindent(i *item) {
+func swapItem(tail []item, current, next int) {
+	tail[current], tail[next] = tail[next], tail[current]
 }
