@@ -20,9 +20,10 @@ import (
 	"github.com/gdamore/tcell/encoding"
 	"github.com/mattn/go-runewidth"
 	"os"
+	"strconv"
+	//"github.com/rivo/tview"
 )
 
-// This program just prints "Hello, World!".  Press ESC to exit.
 func main() {
 	encoding.Register()
 
@@ -36,68 +37,74 @@ func main() {
 		os.Exit(1)
 	}
 
-	defStyle := tcell.StyleDefault.
-		Background(tcell.ColorBlack).
-		Foreground(tcell.ColorWhite)
-	s.SetStyle(defStyle)
+	//defStyle := tcell.StyleDefault.
+	//	Background(tcell.ColorBlack).
+	//	Foreground(tcell.ColorWhite)
+	//s.SetStyle(defStyle)
 
-	notes := setupExamples()
+	notes := item{Home: true, Head: "Homepage"}
+	ch := []string{"£", "$", "%", "^", "&", "*"}
+	for _, c := range ch {
+		notes.Tail = append(notes.Tail, item{Parent: &notes, Head: c})
+	}
 	cursor := 0
-	cursorLim := getCursorLim(notes)
 
-	displayHelloWorld(s, notes, cursor, cursorLim)
+	displayHelloWorld(s, &notes, cursor)
 
 	for {
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
-			displayHelloWorld(s, notes, cursor, cursorLim)
+			displayHelloWorld(s, &notes, cursor)
 		case *tcell.EventKey:
 			switch ev.Key() {
 			case tcell.KeyEscape:
 				s.Fini()
 				os.Exit(0)
-			case tcell.KeyUp:
-				newItem(&notes.Tail[cursor])
-				displayHelloWorld(s, notes, cursor, cursorLim)
-				cursor++
-				s.Sync()
-			case tcell.KeyDown:
-				notes.Tail[cursor].Remove()
-				displayHelloWorld(s, notes, cursor, cursorLim)
-				s.Sync()
-			case tcell.KeyLeft:
-				notes.Tail[cursor].MoveUp()
-				//cursor %= cursorLim
-				displayHelloWorld(s, notes, cursor, cursorLim)
-				cursor--
-				s.Sync()
 			case tcell.KeyRight:
-				notes.Tail[cursor].MoveDown()
-				displayHelloWorld(s, notes, cursor, cursorLim)
+				newItem(&notes.Tail[cursor])
 				cursor++
-				//cursor %= cursorLim
-				s.Sync()
+				cursorLim := len(notes.Tail)
+				cursor %= cursorLim
+				displayHelloWorld(s, &notes, cursor)
+			case tcell.KeyLeft:
+				notes.Tail[cursor].Remove()
+				if cursor != 0 {
+					cursor--
+				}
+				displayHelloWorld(s, &notes, cursor)
+			//case tcell.KeyUp:
+			//	if cursor == 0 {
+			//		continue
+			//	}
+			//	notes.Tail[cursor].MoveUp()
+			//	cursor--
+			//	displayHelloWorld(s, &notes, cursor)
+			//case tcell.KeyDown:
+			//	notes.Tail[cursor].MoveDown()
+			//	cursor++
+			//	cursor %= len(notes.Tail)
+			//	displayHelloWorld(s, &notes, cursor)
+			case tcell.KeyUp:
+				if cursor == 0 {
+					continue
+				}
+				cursor--
+				displayHelloWorld(s, &notes, cursor)
+			case tcell.KeyDown:
+				cursor++
+				cursorLim := len(notes.Tail)
+				cursor %= cursorLim
+				displayHelloWorld(s, &notes, cursor)
+			//case tcell.KeyEnter:
+
+			case tcell.KeyRune:
+				input := string(ev.Rune())
+				notes.Tail[cursor].Head += input
+				displayHelloWorld(s, &notes, cursor)
 			}
 		}
 	}
-}
-
-func setupExamples() *item {
-	notes := item{Home: true, Head: "notes"}
-	ch := []string{"£", "$", "%", "^", "&", "*"}
-	for _, c := range ch {
-		notes.Tail = append(notes.Tail, item{Parent: &notes, Head: c})
-	}
-	//fmt.Println(len(notes.Tail))
-	newItem(&notes.Tail[3])
-	//fmt.Println(len(notes.Tail))
-
-	return &notes
-}
-
-func getCursorLim(selected *item) int {
-	return len(selected.Tail)
 }
 
 func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
@@ -114,12 +121,17 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func displayHelloWorld(s tcell.Screen, n *item, cursor int, cursorLim int) {
-	w, h := s.Size()
+func displayHelloWorld(s tcell.Screen, n *item, cursor int) {
+	//w, h := s.Size()
 	s.Clear()
-	emitStr(s, w/2-7, h/2-2, tcell.StyleDefault, string(cursor))
-	emitStr(s, w/2-7, h/2-1, tcell.StyleDefault, n.Head)
-	emitStr(s, w/2-7, h/2, tcell.StyleDefault, n.StringChildren())
-	emitStr(s, w/2-9, h/2+1, tcell.StyleDefault, "Press ESC to exit.")
-	s.Show()
+	start := 10
+	emitStr(s, start-1, start+cursor, tcell.StyleDefault, ">")
+	emitStr(s, start, start-5, tcell.StyleDefault, "Press ESC to exit.")
+	emitStr(s, start, start-4, tcell.StyleDefault, n.Head)
+	emitStr(s, start, start-3, tcell.StyleDefault, "Should see all these: "+n.StringChildren())
+	emitStr(s, start, start-1, tcell.StyleDefault, "Cursor ID: "+strconv.Itoa(cursor))
+	for index := range n.Tail {
+		emitStr(s, start, start+index, tcell.StyleDefault, n.Tail[index].Head)
+	}
+	s.Sync()
 }
