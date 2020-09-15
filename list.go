@@ -20,9 +20,9 @@ func (i *item) Print() {
 
 func (i *item) StringChildren() (s string) {
 	for index := range i.Tail {
-		s += i.Tail[index].Head + "\t"
+		s += i.Tail[index].Head + ","
 	}
-	return s
+	return
 }
 
 // Locate returns the index value for the selected item, within its parent's tail
@@ -35,12 +35,22 @@ func (i *item) Locate() (index int) {
 	return
 }
 
-func (i *item) InsertAt(tail []item, index int) {
-	tail = append(tail, *i)
-	copy(tail[index+1:], tail[index:])
-	tail[index] = *i
+// InsertAlongside places itself next to a target item
+func (i *item) InsertAlongside(j *item, index int) {
+	j.Parent.Tail = append(j.Parent.Tail, *i)
+	copy(j.Parent.Tail[index+1:], j.Parent.Tail[index:])
+	j.Parent.Tail[index] = *i
 }
 
+// AddSibling places the target item alongside itself in its
+// parent's tail
+func (i *item) AddSibling(j *item, index int) {
+	i.Parent.Tail = append(i.Parent.Tail, *j)
+	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
+	i.Parent.Tail[index] = *j
+}
+
+// Remove the item from its parent's tail
 func (i *item) Remove() {
 	index := i.Locate()
 	i.Parent.Tail = append(i.Parent.Tail[:index], i.Parent.Tail[index+1:]...)
@@ -73,13 +83,13 @@ func (i *item) Indent() {
 func (i *item) Unindent() {
 	i.Remove()
 	index := i.Parent.Locate()
-	i.InsertAt(i.Parent.Parent.Tail, index+1)
+	i.Parent.AddSibling(i, index+1)
 }
 
 func newItem(i *item) {
 	index := i.Locate()
 	blank := item{Parent: i.Parent}
-	blank.InsertAt(i.Parent.Tail, index+1)
+	i.AddSibling(&blank, index+1)
 }
 
 func swapItem(tail []item, current, next int) {
