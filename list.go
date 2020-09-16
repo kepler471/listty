@@ -95,3 +95,15 @@ func newItem(i *item) {
 func swapItem(tail []item, current, next int) {
 	tail[current], tail[next] = tail[next], tail[current]
 }
+
+func unPack(itemToUnPack *item, cursor int, depth int, currentDepth int) *item {
+	if itemToUnPack == nil {
+		panic("😱")
+	}
+
+	if currentDepth == depth {
+		return itemToUnPack
+	}
+
+	return unPack(&itemToUnPack.Tail[cursor], cursor, depth, currentDepth + 1)
+}

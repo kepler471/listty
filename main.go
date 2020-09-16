@@ -41,11 +41,14 @@ func main() {
 		Foreground(tcell.ColorWhite)
 	s.SetStyle(defStyle)
 
-	notes := item{Home: true, Head: "Homepage"}
+	root := item{Home: true, Head: "Homepage"}
+
 	ch := []string{"£", "$", "%", "^", "&", "*"}
 	for _, c := range ch {
-		notes.Tail = append(notes.Tail, item{Parent: &notes, Head: c})
+		root.Tail = append(root.Tail, item{Parent: &root, Head: c})
 	}
+
+	root.Tail[0].Tail = append(root.Tail[0].Tail, item{Parent: &root, Head: "hello"})
 
 	posfmt := "Mouse: %d, %d  "
 	btnfmt := "Buttons: %s"
@@ -54,6 +57,8 @@ func main() {
 	white := tcell.StyleDefault.
 		Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
 
+	depth := 0
+
 	mx, my := -1, -1
 	var bstr, lks, mks string
 	X, Y := s.Size()
@@ -61,23 +66,26 @@ func main() {
 	ecnt := 0
 	start := 5
 	var cx, cy int
-	drawNotes(s, &notes, cy)
+	drawNotes(s, &root, cy, depth)
 	cx += start
 
 	for {
+
+		currentItem := unPack(&root, cy, depth, 0);
+
 		// Block empty tail from existing
-		if len(notes.Tail) == 0 {
-			notes.Tail = append(notes.Tail, item{Parent: &notes})
+		if len(currentItem.Tail) == 0 {
+			currentItem.Tail = append(currentItem.Tail, item{Parent: currentItem})
 			continue
 		}
-		drawNotes(s, &notes, cy)
+		drawNotes(s, currentItem, cy, depth)
 		drawBox(s, X-42-1, Y-7-1, X-2, Y-2, white, ' ')
 		emitStr(s, X-42, Y-7, white, "Press ESC twice to exit")
 		emitStr(s, X-42, Y-6, white, fmt.Sprintf(posfmt, mx, my))
 		emitStr(s, X-42, Y-5, white, fmt.Sprintf(btnfmt, bstr))
 		emitStr(s, X-42, Y-4, white, fmt.Sprintf(keyfmt, lks))
 		emitStr(s, X-42, Y-3, white, fmt.Sprintf(modfmt, mks))
-		emitStr(s, 5, 1, tcell.StyleDefault, notes.Head)
+		emitStr(s, 5, 1, tcell.StyleDefault, currentItem.Head)
 		s.Show()
 
 		switch ev := s.PollEvent().(type) {
@@ -94,48 +102,60 @@ func main() {
 					os.Exit(0)
 				}
 			case tcell.KeyEnter:
-				newItem(&notes.Tail[cy])
+				newItem(&currentItem.Tail[cy])
 				cy++
-				cy %= len(notes.Tail)
+				cy %= len(currentItem.Tail)
 			case tcell.KeyBackspace2:
 				if ev.Modifiers() == 4 {
-					notes.Tail[cy].Remove()
+					currentItem.Tail[cy].Remove()
 					if cy != 0 {
 						cy--
 					}
 					continue
 				}
-				if len(notes.Tail[cy].Head) == 0 {
+				if len(currentItem.Tail[cy].Head) == 0 {
 					continue
 				}
-				notes.Tail[cy].Head = notes.Tail[cy].Head[:len(notes.Tail[cy].Head)-1]
+				currentItem.Tail[cy].Head = currentItem.Tail[cy].Head[:len(currentItem.Tail[cy].Head)-1]
 			case tcell.KeyUp:
 				if ev.Modifiers() == 4 {
 					if cy == 0 {
 						continue
 					}
-					notes.Tail[cy].MoveUp()
+					currentItem.Tail[cy].MoveUp()
 				}
 				if cy == 0 {
-					cy = len(notes.Tail) - 1
+					cy = len(currentItem.Tail) - 1
 					continue
 				}
 				cy--
 			case tcell.KeyDown:
 				if ev.Modifiers() == 4 {
-					if cy == len(notes.Tail)-1 {
+					if cy == len(currentItem.Tail)-1 {
 						continue
 					}
-					notes.Tail[cy].MoveDown()
+					currentItem.Tail[cy].MoveDown()
 				}
 				cy++
-				cy %= len(notes.Tail)
+				cy %= len(currentItem.Tail)
 			case tcell.KeyRune:
 				if ev.Modifiers() >= 1 {
 					continue
 				}
 				input := string(ev.Rune())
-				notes.Tail[cy].Head += input
+				currentItem.Tail[cy].Head += input
+
+			case tcell.KeyRight:
+				if len(currentItem.Tail) == 0 {
+					continue
+				}
+				depth++
+
+			case tcell.KeyLeft:
+				if currentItem.Parent == nil {
+					continue
+				}
+				depth--
 			}
 		}
 	}
@@ -155,16 +175,21 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func drawNotes(s tcell.Screen, n *item, cursor int) {
+func drawNotes(s tcell.Screen, currentItem *item, cursor int, depth int) {
 	//w, h := s.Size()
 	s.Clear()
 	start := 5
 	emitStr(s, start-1, start+cursor, tcell.StyleDefault, ">")
-	emitStr(s, start, start-3, tcell.StyleDefault, "Data: "+n.StringChildren())
+	emitStr(s, start, start-3, tcell.StyleDefault, "Data: "+currentItem.StringChildren())
 	emitStr(s, start, start-1, tcell.StyleDefault, "Cursor Y value: "+strconv.Itoa(cursor))
-	for index := range n.Tail {
-		emitStr(s, start, start+index, tcell.StyleDefault, n.Tail[index].Head)
+
+
+	emitStr(s, start, start-5,tcell.StyleDefault, "james hack: " +currentItem.Head)
+
+	for index := range currentItem.Tail {
+		emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)
 	}
+
 	s.Show()
 }
 
