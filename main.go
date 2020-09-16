@@ -21,6 +21,7 @@ import (
 	"github.com/mattn/go-runewidth"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -48,7 +49,7 @@ func main() {
 		root.Tail = append(root.Tail, item{Parent: &root, Head: c})
 	}
 
-	root.Tail[0].Tail = append(root.Tail[0].Tail, item{Parent: &root, Head: "hello"})
+	root.Tail[0].Tail = append(root.Tail[0].Tail, item{Parent: &root.Tail[0], Head: "hello"})
 
 	posfmt := "Mouse: %d, %d  "
 	btnfmt := "Buttons: %s"
@@ -144,12 +145,15 @@ func main() {
 				}
 				input := string(ev.Rune())
 				currentItem.Tail[cy].Head += input
-
 			case tcell.KeyRight:
 				if currentItem == nil || len(currentItem.Tail) == 0 {
+					currentItem.Tail[cy].AddChild(&item{Head: "newborn baby", Parent: &currentItem.Tail[cy]})
+					cy = 0
+
 					continue
 				}
 				depth++
+				//cy = 0
 
 			case tcell.KeyLeft:
 				if currentItem.Parent == nil {
@@ -179,11 +183,13 @@ func drawNotes(s tcell.Screen, currentItem *item, cursor int, depth int) {
 	//w, h := s.Size()
 	s.Clear()
 	start := 5
+	// TODO wrap into path function
+	path := currentItem.Path([]string{""})
+	reverse(path)
 	emitStr(s, start-1, start+cursor, tcell.StyleDefault, ">")
 	emitStr(s, start, start-3, tcell.StyleDefault, "Data: "+currentItem.StringChildren())
 	emitStr(s, start, start-1, tcell.StyleDefault, "Cursor Y value: "+strconv.Itoa(cursor))
-
-	emitStr(s, start, start-5, tcell.StyleDefault, "james hack: "+currentItem.Head)
+	emitStr(s, start, start+20, tcell.StyleDefault, "Item path: "+strings.Join(path, " > "))
 
 	for index := range currentItem.Tail {
 		emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)

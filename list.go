@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 )
 
 type item struct {
@@ -25,29 +27,19 @@ func (i *item) StringChildren() (s string) {
 	return
 }
 
-// Locate returns the index value for the selected item, within its parent's tail
-func (i *item) Locate() (index int) {
-	for index = range i.Parent.Tail {
-		if i == &i.Parent.Tail[index] {
-			return
-		}
+func (i *item) Path(p []string) []string {
+	p = append(p, i.Head)
+	if i.Parent == nil {
+		return p
 	}
-	return
+	return i.Parent.Path(p)
 }
 
-// InsertAlongside places itself next to a target item
-func (i *item) InsertAlongside(j *item, index int) {
-	j.Parent.Tail = append(j.Parent.Tail, *i)
-	copy(j.Parent.Tail[index+1:], j.Parent.Tail[index:])
-	j.Parent.Tail[index] = *i
-}
-
-// AddSibling places the target item alongside itself in its
-// parent's tail
-func (i *item) AddSibling(j *item, index int) {
-	i.Parent.Tail = append(i.Parent.Tail, *j)
-	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
-	i.Parent.Tail[index] = *j
+func reverse(s []string) []string {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
 }
 
 // Remove the item from its parent's tail
@@ -86,9 +78,39 @@ func (i *item) Unindent() {
 	i.Parent.AddSibling(i, index+1)
 }
 
+// Locate returns the index value for the selected item, within its parent's tail
+func (i *item) Locate() (index int) {
+	for index = range i.Parent.Tail {
+		if i == &i.Parent.Tail[index] {
+			return
+		}
+	}
+	return
+}
+
+// InsertAlongside places itself next to a target item
+func (i *item) InsertAlongside(j *item, index int) {
+	j.Parent.Tail = append(j.Parent.Tail, *i)
+	copy(j.Parent.Tail[index+1:], j.Parent.Tail[index:])
+	j.Parent.Tail[index] = *i
+}
+
+// AddSibling places the target item alongside itself in its
+// parent's tail
+func (i *item) AddSibling(j *item, index int) *item {
+	i.Parent.Tail = append(i.Parent.Tail, *j)
+	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
+	i.Parent.Tail[index] = *j
+	return j
+}
+
+func (i *item) AddChild(j *item) {
+	index := i.Locate()
+	i.AddSibling(j, index).Indent()
+}
 func newItem(i *item) {
 	index := i.Locate()
-	blank := item{Parent: i.Parent}
+	blank := item{Parent: i.Parent, Head: strconv.Itoa(index + 1)} // printing index
 	i.AddSibling(&blank, index+1)
 }
 
@@ -98,12 +120,11 @@ func swapItem(tail []item, current, next int) {
 
 func unPack(itemToUnPack *item, cursor int, depth int, currentDepth int) *item {
 	if itemToUnPack == nil {
-		panic("😱")
+		log.Fatal("😱")
 	}
 
 	if currentDepth == depth {
 		return itemToUnPack
 	}
-
 	return unPack(&itemToUnPack.Tail[cursor], cursor, depth, currentDepth+1)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -42,4 +43,23 @@ func TestItem_InsertAt(t *testing.T) {
 		t.Errorf(`notes2.Tail is the same length`)
 	}
 	t.Logf("notes2 is now %v items long", len(notes2.Tail))
+}
+
+func TestItem_Path(t *testing.T) {
+	/*
+		a
+			b
+				c
+	*/
+	i := item{Head: "a"}
+	j := item{Head: "b", Parent: &i}
+	k := item{Head: "c", Parent: &j}
+	i.Tail = append(i.Tail, j)
+	j.Tail = append(j.Tail, k)
+	//i.AddChild(&j)
+	//j.AddChild(&k)
+	path := k.Path([]string{""})
+	reverse(path)
+	ppath := strings.Join(path, " > ")
+	t.Logf("Full file path: %v", ppath)
 }
