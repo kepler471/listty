@@ -105,5 +105,5 @@ func unPack(itemToUnPack *item, cursor int, depth int, currentDepth int) *item {
 		return itemToUnPack
 	}
 
-	return unPack(&itemToUnPack.Tail[cursor], cursor, depth, currentDepth + 1)
+	return unPack(&itemToUnPack.Tail[cursor], cursor, depth, currentDepth+1)
 }

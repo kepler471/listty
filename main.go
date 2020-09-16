@@ -71,7 +71,7 @@ func main() {
 
 	for {
 
-		currentItem := unPack(&root, cy, depth, 0);
+		currentItem := unPack(&root, cy, depth, 0)
 
 		// Block empty tail from existing
 		if len(currentItem.Tail) == 0 {
@@ -146,7 +146,7 @@ func main() {
 				currentItem.Tail[cy].Head += input
 
 			case tcell.KeyRight:
-				if len(currentItem.Tail) == 0 {
+				if currentItem == nil || len(currentItem.Tail) == 0 {
 					continue
 				}
 				depth++
@@ -183,8 +183,7 @@ func drawNotes(s tcell.Screen, currentItem *item, cursor int, depth int) {
 	emitStr(s, start, start-3, tcell.StyleDefault, "Data: "+currentItem.StringChildren())
 	emitStr(s, start, start-1, tcell.StyleDefault, "Cursor Y value: "+strconv.Itoa(cursor))
 
-
-	emitStr(s, start, start-5,tcell.StyleDefault, "james hack: " +currentItem.Head)
+	emitStr(s, start, start-5, tcell.StyleDefault, "james hack: "+currentItem.Head)
 
 	for index := range currentItem.Tail {
 		emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)
