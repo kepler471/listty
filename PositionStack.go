@@ -1,16 +1,16 @@
 package main
 
+type PositionStack struct {
+	Positions []Position
+}
+
 type Position struct {
 	Depth int
 	Row   int
 }
 
-type PositionStack struct {
-	AllPositions []Position
-}
-
 func (pStack *PositionStack) IsEmpty() bool {
-	return &pStack.AllPositions == nil
+	return &pStack.Positions == nil
 }
 
 func (pStack *PositionStack) GetLast() *Position {
@@ -32,7 +32,7 @@ func (pStack *PositionStack) GetPosition(depth int) *Position {
 		}
 	}
 
-	return &pStack.AllPositions[depth]
+	return &pStack.Positions[depth]
 }
 
 func (pStack *PositionStack) GetRow(depth int) int {
@@ -57,7 +57,7 @@ func (pStack *PositionStack) AddPosition(depth, row int) {
 }
 
 func (pStack *PositionStack) Push(p Position) {
-	pStack.AllPositions = append(pStack.AllPositions, p)
+	pStack.Positions = append(pStack.Positions, p)
 }
 
 func (pStack *PositionStack) Pop() {
@@ -65,12 +65,12 @@ func (pStack *PositionStack) Pop() {
 		return
 	}
 
-	pStack.AllPositions = pStack.AllPositions[:pStack.Size()]
+	pStack.Positions = pStack.Positions[:pStack.Size()]
 }
 
 func (pStack *PositionStack) Size() int {
 	if pStack.IsEmpty() {
 		return 0
 	}
-	return len(pStack.AllPositions) - 1
+	return len(pStack.Positions) - 1
 }
