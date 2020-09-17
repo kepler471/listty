@@ -21,7 +21,7 @@ func (pStack *PositionStack) GetLast() *Position {
 		}
 	}
 
-	return pStack.GetPosition(pStack.Size())
+	return pStack.GetPosition(pStack.Size() - 1)
 }
 
 func (pStack *PositionStack) GetPosition(depth int) *Position {
@@ -65,12 +65,12 @@ func (pStack *PositionStack) Pop() {
 		return
 	}
 
-	pStack.Positions = pStack.Positions[:pStack.Size()]
+	pStack.Positions = pStack.Positions[:pStack.Size() - 1]
 }
 
 func (pStack *PositionStack) Size() int {
 	if pStack.IsEmpty() {
 		return 0
 	}
-	return len(pStack.Positions) - 1
+	return len(pStack.Positions)
 }
