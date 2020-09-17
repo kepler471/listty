@@ -71,6 +71,7 @@ func main() {
 		y: cy,
 		i: &root,
 	}
+	depth:=0
 	currentItem := &root
 	drawInfo(s, currentItem, c.y, depth)
 	row := 0
