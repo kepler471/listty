@@ -152,7 +152,7 @@ func (i *item) ForEachChild(iteratee TailIteratee) {
 func getCurrentItem(root *item, stack *PositionStack) *item {
 	currentItem := root
 
-	_getCurrentItemIterator(root, stack, func(nextItem *item) {
+	currentItemIterator(root, stack, func(nextItem *item) {
 		currentItem = nextItem
 	})
 
@@ -160,7 +160,7 @@ func getCurrentItem(root *item, stack *PositionStack) *item {
 }
 
 // From root get to last item invoking TreeIteratee on each item
-func _getCurrentItemIterator(root *item, stack *PositionStack, iteratee TreeIteratee) {
+func currentItemIterator(root *item, stack *PositionStack, iteratee TreeIteratee) {
 	_toLastItemInStack(root, stack, iteratee, 0)
 }
 
