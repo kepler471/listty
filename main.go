@@ -49,7 +49,7 @@ func main() {
 		root.Tail = append(root.Tail, item{Parent: &root, Head: c})
 	}
 
-	root.Tail[0].Tail = append(root.Tail[0].Tail, item{Parent: &root.Tail[0], Head: "hello"})
+	root.Tail[0].Tail = append(root.Tail[0].Tail, item{Parent: &root.Tail[0], Head: "hello", depth: 1})
 
 	posfmt := "Mouse: %d, %d  "
 	btnfmt := "Buttons: %s"
@@ -67,19 +67,24 @@ func main() {
 	ecnt := 0
 	start := 5
 	var cx, cy int
-	drawNotes(s, &root, cy, depth)
 	cx += start
+	currentItem := &root
+	drawInfo(s, currentItem, cy, depth)
+	row := 0
+	currentItem.Plot(s, &row)
 
 	for {
 
-		currentItem := unPack(&root, cy, depth, 0)
+		//currentItem := unPack(&root, cy, depth, 0)
 
 		// Block empty tail from existing
 		if len(currentItem.Tail) == 0 {
 			currentItem.Tail = append(currentItem.Tail, item{Parent: currentItem})
 			continue
 		}
-		drawNotes(s, currentItem, cy, depth)
+		drawInfo(s, currentItem, cy, depth)
+		row = 0
+		currentItem.Plot(s, &row)
 		drawBox(s, X-42-1, Y-7-1, X-2, Y-2, white, ' ')
 		emitStr(s, X-42, Y-7, white, "Press ESC twice to exit")
 		emitStr(s, X-42, Y-6, white, fmt.Sprintf(posfmt, mx, my))
@@ -138,13 +143,12 @@ func main() {
 					currentItem.Tail[cy].MoveDown()
 				}
 				cy++
-				cy %= len(currentItem.Tail)
+				cy %= row // len(currentItem.Tail)
 			case tcell.KeyRune:
 				if ev.Modifiers() >= 1 {
 					continue
 				}
-				input := string(ev.Rune())
-				currentItem.Tail[cy].Head += input
+				currentItem.Tail[cy].Head += string(ev.Rune())
 			case tcell.KeyRight:
 				if currentItem == nil || len(currentItem.Tail) == 0 {
 					currentItem.Tail[cy].AddChild(&item{Head: "newborn baby", Parent: &currentItem.Tail[cy]})
@@ -160,9 +164,55 @@ func main() {
 					continue
 				}
 				depth--
+			case tcell.KeyTab:
+
+			case tcell.KeyBacktab:
 			}
 		}
 	}
+}
+
+func (i *item) Plot(s tcell.Screen, row *int) {
+	if len(i.Tail) > 0 {
+		for index, t := range i.Tail {
+			emitStr(s, 5, 5+*row, tcell.StyleDefault, fmt.Sprintf(
+				"Tail Id: %v, Depth: %v, Head: %v", strconv.Itoa(index), t.depth, strings.Repeat("\t", t.depth)+t.Head),
+			)
+			*row++
+			t.Plot(s, row)
+		}
+	} else {
+		return
+	}
+}
+
+type Cursor struct {
+	x int
+	y int
+	i *item
+}
+
+// Down moves cursor down a single row, and selects the correct item
+func (c *Cursor) Down() {
+	if len(c.i.Tail) > 0 {
+		c.i = &c.i.Tail[0]
+		c.y++
+		return
+	}
+	c.i, c.y = searchDown(c.i, c.y)
+}
+
+func searchDown(i *item, cy int) (*item, int) {
+	index := i.Locate()
+	if len(i.Parent.Tail) >= index+2 {
+		i = &i.Parent.Tail[index+1]
+		cy++
+		return i, cy
+	}
+	if i.Parent.Parent == nil { // Protection searching above root
+		return i, cy
+	}
+	return searchDown(i.Parent, cy)
 }
 
 func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
@@ -179,21 +229,21 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func drawNotes(s tcell.Screen, currentItem *item, cursor int, depth int) {
+func drawFromCursor() {}
+
+func drawInfo(s tcell.Screen, currentItem *item, cursor int, depth int) {
 	//w, h := s.Size()
 	s.Clear()
 	start := 5
-	// TODO wrap into path function
-	path := currentItem.Path([]string{""})
-	reverse(path)
+	path := currentItem.Path()
 	emitStr(s, start-1, start+cursor, tcell.StyleDefault, ">")
 	emitStr(s, start, start-3, tcell.StyleDefault, "Data: "+currentItem.StringChildren())
 	emitStr(s, start, start-1, tcell.StyleDefault, "Cursor Y value: "+strconv.Itoa(cursor))
 	emitStr(s, start, start+20, tcell.StyleDefault, "Item path: "+strings.Join(path, " > "))
 
-	for index := range currentItem.Tail {
-		emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)
-	}
+	//for index := range currentItem.Tail {
+	//	emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)
+	//}
 
 	s.Show()
 }

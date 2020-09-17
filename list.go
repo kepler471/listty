@@ -11,6 +11,7 @@ type item struct {
 	Parent *item
 	Head   string
 	Tail   []item
+	depth  int
 }
 
 func (i *item) Print() {
@@ -27,12 +28,17 @@ func (i *item) StringChildren() (s string) {
 	return
 }
 
-func (i *item) Path(p []string) []string {
+func (i *item) Path() []string {
+	p := []string{""}
+	return reverse(i.path(p))
+}
+
+func (i *item) path(p []string) []string {
 	p = append(p, i.Head)
 	if i.Parent == nil {
 		return p
 	}
-	return i.Parent.Path(p)
+	return i.Parent.path(p)
 }
 
 func reverse(s []string) []string {
@@ -68,12 +74,14 @@ func (i *item) MoveDown() {
 func (i *item) Indent() {
 	index := i.Locate()
 	i.Remove()
+	i.depth++
 	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, *i)
 }
 
 // Unindent moves an item after its Parent item, in its Parent slice
 func (i *item) Unindent() {
 	i.Remove()
+	i.depth--
 	index := i.Parent.Locate()
 	i.Parent.AddSibling(i, index+1)
 }
@@ -100,13 +108,14 @@ func (i *item) InsertAlongside(j *item, index int) {
 func (i *item) AddSibling(j *item, index int) *item {
 	i.Parent.Tail = append(i.Parent.Tail, *j)
 	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
+	j.depth = i.depth
 	i.Parent.Tail[index] = *j
 	return j
 }
 
 func (i *item) AddChild(j *item) {
 	index := i.Locate()
-	i.AddSibling(j, index).Indent()
+	i.AddSibling(j, index+1).Indent()
 }
 func newItem(i *item) {
 	index := i.Locate()
