@@ -68,8 +68,13 @@ func main() {
 	start := 5
 	var cx, cy int
 	cx += start
+	c := Cursor{
+		x: cx,
+		y: cy,
+		i: &root,
+	}
 	currentItem := &root
-	drawInfo(s, currentItem, cy, depth)
+	drawInfo(s, currentItem, c.y, depth)
 	row := 0
 	currentItem.Plot(s, &row)
 
@@ -82,7 +87,7 @@ func main() {
 			currentItem.Tail = append(currentItem.Tail, item{Parent: currentItem})
 			continue
 		}
-		drawInfo(s, currentItem, cy, depth)
+		drawInfo(s, currentItem, c.y, depth)
 		row = 0
 		currentItem.Plot(s, &row)
 		drawBox(s, X-42-1, Y-7-1, X-2, Y-2, white, ' ')
@@ -94,6 +99,7 @@ func main() {
 		emitStr(s, 5, 1, tcell.StyleDefault, currentItem.Head)
 		s.Show()
 
+		// TODO: Replace currentItem with cursor.item
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
@@ -108,56 +114,56 @@ func main() {
 					os.Exit(0)
 				}
 			case tcell.KeyEnter:
-				newItem(&currentItem.Tail[cy])
-				cy++
-				cy %= len(currentItem.Tail)
+				newItem(&currentItem.Tail[c.y])
+				c.y++
+				c.y %= row // len(currentItem.Tail)
 			case tcell.KeyBackspace2:
 				if ev.Modifiers() == 4 {
-					currentItem.Tail[cy].Remove()
-					if cy != 0 {
-						cy--
+					currentItem.Tail[c.y].Remove()
+					if c.y != 0 {
+						c.y--
 					}
 					continue
 				}
-				if len(currentItem.Tail[cy].Head) == 0 {
+				if len(currentItem.Tail[c.y].Head) == 0 {
 					continue
 				}
-				currentItem.Tail[cy].Head = currentItem.Tail[cy].Head[:len(currentItem.Tail[cy].Head)-1]
+				currentItem.Tail[c.y].Head = currentItem.Tail[c.y].Head[:len(currentItem.Tail[c.y].Head)-1]
 			case tcell.KeyUp:
 				if ev.Modifiers() == 4 {
-					if cy == 0 {
+					if c.y == 0 {
 						continue
 					}
-					currentItem.Tail[cy].MoveUp()
+					currentItem.Tail[c.y].MoveUp()
 				}
-				if cy == 0 {
-					cy = len(currentItem.Tail) - 1
+				if c.y == 0 {
+					c.y = len(currentItem.Tail) - 1
 					continue
 				}
-				cy--
+				c.y--
 			case tcell.KeyDown:
 				if ev.Modifiers() == 4 {
-					if cy == len(currentItem.Tail)-1 {
+					if c.y == len(currentItem.Tail)-1 {
 						continue
 					}
-					currentItem.Tail[cy].MoveDown()
+					currentItem.Tail[c.y].MoveDown()
 				}
-				cy++
-				cy %= row // len(currentItem.Tail)
+				c.y++
+				c.y %= row // len(currentItem.Tail)
 			case tcell.KeyRune:
 				if ev.Modifiers() >= 1 {
 					continue
 				}
-				currentItem.Tail[cy].Head += string(ev.Rune())
+				currentItem.Tail[c.y].Head += string(ev.Rune())
 			case tcell.KeyRight:
 				if currentItem == nil || len(currentItem.Tail) == 0 {
-					currentItem.Tail[cy].AddChild(&item{Head: "newborn baby", Parent: &currentItem.Tail[cy]})
-					cy = 0
+					currentItem.Tail[c.y].AddChild(&item{Head: "newborn baby", Parent: &currentItem.Tail[c.y]})
+					c.y = 0
 
 					continue
 				}
 				depth++
-				cy = 0
+				c.y = 0
 
 			case tcell.KeyLeft:
 				if currentItem.Parent == nil {
@@ -165,12 +171,12 @@ func main() {
 				}
 				depth--
 			case tcell.KeyTab:
-				currentItem.Tail[cy].Head = "\t" + currentItem.Tail[cy].Head
-				currentItem.Tail[cy].Indent()
-				cy--
+				currentItem.Tail[c.y].Head = "\t" + currentItem.Tail[c.y].Head
+				currentItem.Tail[c.y].Indent()
+				c.y--
 				//case tcell.KeyBacktab:
-				//notes.Tail[cy].Head = notes.Tail[cy].Head[1:]
-				//notes.Tail[cy].Unindent()
+				//notes.Tail[c.y].Head = notes.Tail[c.y].Head[1:]
+				//notes.Tail[c.y].Unindent()
 			}
 		}
 	}
