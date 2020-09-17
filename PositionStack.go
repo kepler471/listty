@@ -10,7 +10,14 @@ type Position struct {
 }
 
 func (pStack *PositionStack) IsEmpty() bool {
-	return &pStack.Positions == nil
+	return pStack.Size() == 0
+}
+
+func (pStack *PositionStack) Size() int {
+	if &pStack.Positions == nil {
+		return 0
+	}
+	return len(pStack.Positions)
 }
 
 func (pStack *PositionStack) GetLast() *Position {
@@ -20,7 +27,6 @@ func (pStack *PositionStack) GetLast() *Position {
 			Row:   0,
 		}
 	}
-
 	return pStack.GetPosition(pStack.Size() - 1)
 }
 
@@ -31,7 +37,6 @@ func (pStack *PositionStack) GetPosition(depth int) *Position {
 			Row:   0,
 		}
 	}
-
 	return &pStack.Positions[depth]
 }
 
@@ -61,16 +66,8 @@ func (pStack *PositionStack) Push(p Position) {
 }
 
 func (pStack *PositionStack) Pop() {
-	if pStack.Size() == 0 || pStack.IsEmpty() {
+	if pStack.IsEmpty() {
 		return
 	}
-
-	pStack.Positions = pStack.Positions[:pStack.Size() - 1]
-}
-
-func (pStack *PositionStack) Size() int {
-	if pStack.IsEmpty() {
-		return 0
-	}
-	return len(pStack.Positions)
+	pStack.Positions = pStack.Positions[:pStack.Size()-1]
 }

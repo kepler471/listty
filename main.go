@@ -77,14 +77,16 @@ func main() {
 	row := 0
 	currentItem.Plot(s, &row)
 
-	for {
 
-		//currentItem := unPack(&root, cy, depth, 0)
+	for {
+		currentItem := getCurrentItem(&root, &stack)
 
 		// Block empty tail from existing
 		if len(currentItem.Tail) == 0 {
-			currentItem.Tail = append(currentItem.Tail, item{Parent: currentItem})
-			continue
+			currentItem.Tail = append(currentItem.Tail, item{
+				Parent: currentItem,
+				Head:   "Parent: " + currentItem.Head + ", " + " Depth: " + strconv.Itoa(depth) + " Row: " + strconv.Itoa(cy),
+			})
 		}
 		drawInfo(s, currentItem, c.y, depth)
 		row = 0
@@ -165,8 +167,10 @@ func main() {
 				c.y = 0
 
 			case tcell.KeyLeft:
-				if currentItem.Parent == nil {
-					continue
+				if !currentItem.Home {
+					stack.Pop()
+					depth--
+					cy = stack.GetRow(depth)
 				}
 				stack.Pop()
 				depth--
