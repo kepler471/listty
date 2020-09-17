@@ -161,6 +161,7 @@ func getCurrentItem(root *item, stack *PositionStack) *item {
 
 // From root get to last item invoking TreeIteratee on each item
 func currentItemIterator(root *item, stack *PositionStack, iteratee TreeIteratee) {
+	// could set count to a different depth to iterate from -> to other nodes in tree 🤔
 	_toLastItemInStack(root, stack, iteratee, 0)
 }
 
