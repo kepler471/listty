@@ -58,8 +58,6 @@ func main() {
 	white := tcell.StyleDefault.
 		Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
 
-	depth := 0
-
 	mx, my := -1, -1
 	var bstr, lks, mks string
 	X, Y := s.Size()
@@ -169,6 +167,7 @@ func main() {
 				if currentItem.Parent == nil {
 					continue
 				}
+				stack.Pop()
 				depth--
 			case tcell.KeyTab:
 				currentItem.Tail[c.y].Head = "\t" + currentItem.Tail[c.y].Head

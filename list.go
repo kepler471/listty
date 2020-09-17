@@ -137,3 +137,12 @@ func unPack(itemToUnPack *item, cursor int, depth int, currentDepth int) *item {
 	}
 	return unPack(&itemToUnPack.Tail[cursor], cursor, depth, currentDepth+1)
 }
+
+// Implementation always uses root
+func getCurrentItem(root *item, stack *PositionStack, count int) *item {
+	if stack.IsEmpty() || stack.GetLast().Depth == count {
+		return root
+	}
+
+	return getCurrentItem(&root.Tail[stack.GetRow(count)], stack, count+1)
+}
