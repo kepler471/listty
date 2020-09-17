@@ -157,7 +157,7 @@ func main() {
 					continue
 				}
 				depth++
-				//cy = 0
+				cy = 0
 
 			case tcell.KeyLeft:
 				if currentItem.Parent == nil {
@@ -165,8 +165,12 @@ func main() {
 				}
 				depth--
 			case tcell.KeyTab:
-
-			case tcell.KeyBacktab:
+				currentItem.Tail[cy].Head = "\t" + currentItem.Tail[cy].Head
+				currentItem.Tail[cy].Indent()
+				cy--
+				//case tcell.KeyBacktab:
+				//notes.Tail[cy].Head = notes.Tail[cy].Head[1:]
+				//notes.Tail[cy].Unindent()
 			}
 		}
 	}
@@ -192,27 +196,29 @@ type Cursor struct {
 	i *item
 }
 
-// Down moves cursor down a single row, and selects the correct item
+// Down moves cursor down a single row, and selects the correct item.
 func (c *Cursor) Down() {
 	if len(c.i.Tail) > 0 {
 		c.i = &c.i.Tail[0]
 		c.y++
 		return
 	}
-	c.i, c.y = searchDown(c.i, c.y)
+	c.i = c.searchDown(c.i)
 }
 
-func searchDown(i *item, cy int) (*item, int) {
+// searchDown finds the next item in an ordered tree. If it cannot
+// find a suitable next item, it returns the original item.
+func (c *Cursor) searchDown(i *item) *item {
 	index := i.Locate()
-	if len(i.Parent.Tail) >= index+2 {
+	if len(i.Parent.Tail) >= index+2 { // Can it move along parent's tail?
 		i = &i.Parent.Tail[index+1]
-		cy++
-		return i, cy
+		c.y++
+		return i
 	}
 	if i.Parent.Parent == nil { // Protection searching above root
-		return i, cy
+		return c.i
 	}
-	return searchDown(i.Parent, cy)
+	return c.searchDown(i.Parent)
 }
 
 func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
