@@ -77,6 +77,8 @@ func main() {
 	row := 0
 	currentItem.Plot(s, &row)
 
+	stack:=PositionStack{}
+	stack.AddPosition(0 , 0)
 
 	for {
 		currentItem := getCurrentItem(&root, &stack)
