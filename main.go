@@ -64,11 +64,11 @@ func main() {
 	//s.EnableMouse()
 	ecnt := 0
 	start := 5
-	var cx, cy int
+	var cx int
 	cx += start
 	c := Cursor{
 		x: cx,
-		y: cy,
+		y: 0,
 		i: &root,
 	}
 	depth:=0
@@ -87,12 +87,11 @@ func main() {
 		if len(currentItem.Tail) == 0 {
 			currentItem.Tail = append(currentItem.Tail, item{
 				Parent: currentItem,
-				Head:   "Parent: " + currentItem.Head + ", " + " Depth: " + strconv.Itoa(depth) + " Row: " + strconv.Itoa(cy),
+				Head:   "Parent: " + currentItem.Head + ", " + " Depth: " + strconv.Itoa(depth) + " Row: " + strconv.Itoa(c.y),
 			})
 		}
 		drawInfo(s, currentItem, c.y, depth)
-		row = 0
-		currentItem.Plot(s, &row)
+		//currentItem.Plot(s, &row)
 		drawBox(s, X-42-1, Y-7-1, X-2, Y-2, white, ' ')
 		emitStr(s, X-42, Y-7, white, "Press ESC twice to exit")
 		emitStr(s, X-42, Y-6, white, fmt.Sprintf(posfmt, mx, my))
@@ -119,12 +118,14 @@ func main() {
 			case tcell.KeyEnter:
 				newItem(&currentItem.Tail[c.y])
 				c.y++
-				c.y %= row // len(currentItem.Tail)
+				c.y %= len(currentItem.Tail)
+				stack.SetRow(depth, c.y)
 			case tcell.KeyBackspace2:
 				if ev.Modifiers() == 4 {
 					currentItem.Tail[c.y].Remove()
 					if c.y != 0 {
 						c.y--
+						stack.SetRow(depth, c.y)
 					}
 					continue
 				}
@@ -141,9 +142,11 @@ func main() {
 				}
 				if c.y == 0 {
 					c.y = len(currentItem.Tail) - 1
+					stack.SetRow(depth, c.y)
 					continue
 				}
 				c.y--
+				stack.SetRow(depth, c.y)
 			case tcell.KeyDown:
 				if ev.Modifiers() == 4 {
 					if c.y == len(currentItem.Tail)-1 {
@@ -152,30 +155,24 @@ func main() {
 					currentItem.Tail[c.y].MoveDown()
 				}
 				c.y++
-				c.y %= row // len(currentItem.Tail)
+				c.y %= len(currentItem.Tail)
+				stack.SetRow(depth, c.y)
 			case tcell.KeyRune:
 				if ev.Modifiers() >= 1 {
 					continue
 				}
 				currentItem.Tail[c.y].Head += string(ev.Rune())
 			case tcell.KeyRight:
-				if currentItem == nil || len(currentItem.Tail) == 0 {
-					currentItem.Tail[c.y].AddChild(&item{Head: "newborn baby", Parent: &currentItem.Tail[c.y]})
-					c.y = 0
-
-					continue
-				}
 				depth++
 				c.y = 0
+				stack.AddPosition(depth, c.y)
 
 			case tcell.KeyLeft:
 				if !currentItem.Home {
 					stack.Pop()
 					depth--
-					cy = stack.GetRow(depth)
+					c.y = stack.GetRow(depth)
 				}
-				stack.Pop()
-				depth--
 			case tcell.KeyTab:
 				currentItem.Tail[c.y].Head = "\t" + currentItem.Tail[c.y].Head
 				currentItem.Tail[c.y].Indent()
@@ -259,9 +256,9 @@ func drawInfo(s tcell.Screen, currentItem *item, cursor int, depth int) {
 	emitStr(s, start, start-1, tcell.StyleDefault, "Cursor Y value: "+strconv.Itoa(cursor))
 	emitStr(s, start, start+20, tcell.StyleDefault, "Item path: "+strings.Join(path, " > "))
 
-	//for index := range currentItem.Tail {
-	//	emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)
-	//}
+	for index := range currentItem.Tail {
+		emitStr(s, start, start+index, tcell.StyleDefault, currentItem.Tail[index].Head)
+	}
 
 	s.Show()
 }
