@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 )
 
@@ -14,11 +13,18 @@ type item struct {
 	depth  int
 }
 
+type TreeIteratee func(i *item)
+type TailIteratee func(i *item, idx int)
+
 func (i *item) Print() {
 	fmt.Println("Notes:")
 	for n := range i.Tail {
 		fmt.Printf("\t %v\t%p\n", i.Tail[n].Head, &i.Tail[n])
 	}
+}
+
+func (i *item) IsLeaf() bool {
+	return i.Tail == nil || len(i.Tail) == 0
 }
 
 func (i *item) StringChildren() (s string) {
@@ -127,13 +133,60 @@ func swapItem(tail []item, current, next int) {
 	tail[current], tail[next] = tail[next], tail[current]
 }
 
-func unPack(itemToUnPack *item, cursor int, depth int, currentDepth int) *item {
-	if itemToUnPack == nil {
-		log.Fatal("😱")
+// invoke TreeIteratee on each item in Tail
+func (i *item) ForEachChild(iteratee TailIteratee) {
+	if i.Tail == nil {
+		return
 	}
 
-	if currentDepth == depth {
-		return itemToUnPack
+	for j := 0; j < len(i.Tail); j++ {
+		curItem := &i.Tail[j]
+
+		if curItem != nil {
+			iteratee(curItem, j)
+		}
 	}
-	return unPack(&itemToUnPack.Tail[cursor], cursor, depth, currentDepth+1)
+}
+
+// Implementation always uses root: "From root, get to current item using the PositionStack"
+func getCurrentItem(root *item, stack *PositionStack) *item {
+	currentItem := root
+
+	currentItemIterator(root, stack, func(nextItem *item) {
+		currentItem = nextItem
+	})
+
+	return currentItem
+}
+
+// From root get to last item invoking TreeIteratee on each item
+func currentItemIterator(root *item, stack *PositionStack, iteratee TreeIteratee) {
+	// could set count to a different depth to iterate from -> to other nodes in tree 🤔
+	_toLastItemInStack(root, stack, iteratee, 0)
+}
+
+func _toLastItemInStack(root *item, stack *PositionStack, iteratee TreeIteratee, count int) {
+	if stack.GetLast().Depth == count {
+		iteratee(root)
+	} else {
+		_toLastItemInStack(&root.Tail[stack.GetRow(count)], stack, iteratee, count+1)
+	}
+}
+
+// From current position invoke TreeIteratee on every item
+func traverseTree(root *item, iteratee TreeIteratee) {
+	_traverseTreeIterator(root, iteratee)
+}
+
+// depth first iterates over the entire tree and invokes callback on each item
+func _traverseTreeIterator(root *item, iteratee TreeIteratee) {
+	iteratee(root)
+
+	root.ForEachChild(func(child *item, _ int) {
+		if !child.IsLeaf() {
+			_traverseTreeIterator(child, iteratee)
+		} else {
+			iteratee(child)
+		}
+	})
 }

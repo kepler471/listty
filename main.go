@@ -58,8 +58,6 @@ func main() {
 	white := tcell.StyleDefault.
 		Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
 
-	depth := 0
-
 	mx, my := -1, -1
 	var bstr, lks, mks string
 	X, Y := s.Size()
@@ -73,19 +71,24 @@ func main() {
 		y: cy,
 		i: &root,
 	}
+	depth:=0
 	currentItem := &root
 	drawInfo(s, currentItem, c.y, depth)
 	row := 0
 	currentItem.Plot(s, &row)
 
-	for {
+	stack:=PositionStack{}
+	stack.AddPosition(0 , 0)
 
-		//currentItem := unPack(&root, cy, depth, 0)
+	for {
+		currentItem := getCurrentItem(&root, &stack)
 
 		// Block empty tail from existing
 		if len(currentItem.Tail) == 0 {
-			currentItem.Tail = append(currentItem.Tail, item{Parent: currentItem})
-			continue
+			currentItem.Tail = append(currentItem.Tail, item{
+				Parent: currentItem,
+				Head:   "Parent: " + currentItem.Head + ", " + " Depth: " + strconv.Itoa(depth) + " Row: " + strconv.Itoa(cy),
+			})
 		}
 		drawInfo(s, currentItem, c.y, depth)
 		row = 0
@@ -166,9 +169,12 @@ func main() {
 				c.y = 0
 
 			case tcell.KeyLeft:
-				if currentItem.Parent == nil {
-					continue
+				if !currentItem.Home {
+					stack.Pop()
+					depth--
+					cy = stack.GetRow(depth)
 				}
+				stack.Pop()
 				depth--
 			case tcell.KeyTab:
 				currentItem.Tail[c.y].Head = "\t" + currentItem.Tail[c.y].Head
