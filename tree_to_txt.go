@@ -11,7 +11,7 @@ const (
 	PREFIX      = "- "
 )
 
-type ItemIteratee = func(i *item, depth int)
+type ItemIteratee = func(child *item, depth int)
 
 func treeToTxt(tree *item, fileName string) {
 	err := ioutil.WriteFile(fileName+".txt", *treeToBytes(tree), 0644)
@@ -33,10 +33,10 @@ func treeToBytes(tree *item) *[]byte {
 }
 
 func treeIterator(i *item, depth int, iteratee ItemIteratee) {
-	i.ForEachChild(func(t *item, _ int) {
-		iteratee(t, depth)
-		if !t.IsLeaf() {
-			treeIterator(t, depth+1, iteratee)
+	i.ForEachChild(func(child *item, _ int) {
+		iteratee(child, depth)
+		if !child.IsLeaf() {
+			treeIterator(child, depth+1, iteratee)
 		}
 	})
 }
