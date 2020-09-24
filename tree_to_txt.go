@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 )
 
 const (
@@ -42,19 +43,5 @@ func treeIterator(i *item, depth int, iteratee ItemIteratee) {
 }
 
 func formattedString(head string, depth int) string {
-	return addIndentation(depth) + PREFIX + head + NEW_LINE
-}
-
-func addIndentation(depth int) string {
-	indents := ""
-
-	if depth == 0 {
-		return indents
-	}
-
-	for i := depth; i > 0; i-- {
-		indents += INDENTATION
-	}
-
-	return indents
+	return strings.Repeat(INDENTATION, depth) + PREFIX + head + NEW_LINE
 }
