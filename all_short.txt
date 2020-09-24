@@ -1,5 +1,0 @@
-- example
-	- M:
-		- You chose to work in computer science when this was not such an
-			- obvious career choice.  Can you tell us about how you made this choice
-	- and what you think in retrospect about this choice?
