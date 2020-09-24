@@ -19,9 +19,9 @@ func Test_TreeToBytes(t *testing.T) {
 
 	// create a nested structure
 	for j := 0; j < len(depth0); j++ {
-		Root.Tail = append(Root.Tail, item{Parent: &Root, Head: depth0[j], Home: false})
-		Root.Tail[0].Tail = append(Root.Tail[0].Tail, item{Parent: &Root.Tail[0], Head: depth1[j], Home: false})
-		Root.Tail[0].Tail[0].Tail = append(Root.Tail[0].Tail[0].Tail, item{Parent: &Root.Tail[0].Tail[0], Head: depth2[j], Home: false})
+		Root.Tail = append(Root.Tail, &item{Parent: &Root, Head: depth0[j], Home: false})
+		Root.Tail[0].Tail = append(Root.Tail[0].Tail, &item{Parent: Root.Tail[0], Head: depth1[j], Home: false})
+		Root.Tail[0].Tail[0].Tail = append(Root.Tail[0].Tail[0].Tail, &item{Parent: Root.Tail[0].Tail[0], Head: depth2[j], Home: false})
 	}
 
 	treeByteArray := *treeToBytes(&Root)

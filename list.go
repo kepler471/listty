@@ -9,7 +9,7 @@ type item struct {
 	Home   bool
 	Parent *item
 	Head   string
-	Tail   []item
+	Tail   []*item
 	depth  int
 }
 
@@ -81,7 +81,7 @@ func (i *item) Indent() {
 	index := i.Locate()
 	i.Remove()
 	i.depth++
-	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, *i)
+	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, i)
 }
 
 // Unindent moves an item after its Parent item, in its Parent slice
@@ -95,7 +95,7 @@ func (i *item) Unindent() {
 // Locate returns the index value for the selected item, within its parent's tail
 func (i *item) Locate() (index int) {
 	for index = range i.Parent.Tail {
-		if i == &i.Parent.Tail[index] {
+		if i == i.Parent.Tail[index] {
 			return
 		}
 	}
@@ -104,18 +104,18 @@ func (i *item) Locate() (index int) {
 
 // InsertAlongside places itself next to a target item
 func (i *item) InsertAlongside(j *item, index int) {
-	j.Parent.Tail = append(j.Parent.Tail, *i)
+	j.Parent.Tail = append(j.Parent.Tail, i)
 	copy(j.Parent.Tail[index+1:], j.Parent.Tail[index:])
-	j.Parent.Tail[index] = *i
+	j.Parent.Tail[index] = i
 }
 
 // AddSibling places the target item alongside itself in its
 // parent's tail
 func (i *item) AddSibling(j *item, index int) *item {
-	i.Parent.Tail = append(i.Parent.Tail, *j)
+	i.Parent.Tail = append(i.Parent.Tail, j)
 	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
 	j.depth = i.depth
-	i.Parent.Tail[index] = *j
+	i.Parent.Tail[index] = j
 	return j
 }
 
@@ -129,7 +129,7 @@ func newItem(i *item) {
 	i.AddSibling(&blank, index+1)
 }
 
-func swapItem(tail []item, current, next int) {
+func swapItem(tail []*item, current, next int) {
 	tail[current], tail[next] = tail[next], tail[current]
 }
 
@@ -143,7 +143,7 @@ func (i *item) ForEachChild(iteratee TailIteratee) {
 		curItem := &i.Tail[j]
 
 		if curItem != nil {
-			iteratee(curItem, j)
+			iteratee(*curItem, j)
 		}
 	}
 }
@@ -169,24 +169,6 @@ func _toLastItemInStack(root *item, stack *PositionStack, iteratee TreeIteratee,
 	if stack.GetLast().Depth == count {
 		iteratee(root)
 	} else {
-		_toLastItemInStack(&root.Tail[stack.GetRow(count)], stack, iteratee, count+1)
+		_toLastItemInStack(root.Tail[stack.GetRow(count)], stack, iteratee, count+1)
 	}
-}
-
-// From current position invoke TreeIteratee on every item
-func traverseTree(root *item, iteratee TreeIteratee) {
-	_traverseTreeIterator(root, iteratee)
-}
-
-// depth first iterates over the entire tree and invokes callback on each item
-func _traverseTreeIterator(root *item, iteratee TreeIteratee) {
-	iteratee(root)
-
-	root.ForEachChild(func(child *item, _ int) {
-		if !child.IsLeaf() {
-			_traverseTreeIterator(child, iteratee)
-		} else {
-			iteratee(child)
-		}
-	})
 }
