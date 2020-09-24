@@ -46,10 +46,10 @@ func main() {
 
 	ch := []string{"£", "$", "%", "^", "&", "*"}
 	for _, c := range ch {
-		root.Tail = append(root.Tail, item{Parent: &root, Head: c})
+		root.Tail = append(root.Tail, &item{Parent: &root, Head: c})
 	}
 
-	root.Tail[0].Tail = append(root.Tail[0].Tail, item{Parent: &root.Tail[0], Head: "hello", depth: 1})
+	root.Tail[0].Tail = append(root.Tail[0].Tail, &item{Parent: root.Tail[0], Head: "hello", depth: 1})
 
 	posfmt := "Mouse: %d, %d  "
 	btnfmt := "Buttons: %s"
@@ -71,21 +71,21 @@ func main() {
 		y: 0,
 		i: &root,
 	}
-	depth:=0
+	depth := 0
 	currentItem := &root
 	drawInfo(s, currentItem, c.y, depth)
 	row := 0
 	currentItem.Plot(s, &row)
 
-	stack:=PositionStack{}
-	stack.AddPosition(0 , 0)
+	stack := PositionStack{}
+	stack.AddPosition(0, 0)
 
 	for {
 		currentItem := getCurrentItem(&root, &stack)
 
 		// Block empty tail from existing
 		if len(currentItem.Tail) == 0 {
-			currentItem.Tail = append(currentItem.Tail, item{
+			currentItem.Tail = append(currentItem.Tail, &item{
 				Parent: currentItem,
 				Head:   "Parent: " + currentItem.Head + ", " + " Depth: " + strconv.Itoa(depth) + " Row: " + strconv.Itoa(c.y),
 			})
@@ -116,7 +116,7 @@ func main() {
 					os.Exit(0)
 				}
 			case tcell.KeyEnter:
-				newItem(&currentItem.Tail[c.y])
+				newItem(currentItem.Tail[c.y])
 				c.y++
 				c.y %= len(currentItem.Tail)
 				stack.SetRow(depth, c.y)
@@ -208,7 +208,7 @@ type Cursor struct {
 // Down moves cursor down a single row, and selects the correct item.
 func (c *Cursor) Down() {
 	if len(c.i.Tail) > 0 {
-		c.i = &c.i.Tail[0]
+		c.i = c.i.Tail[0]
 		c.y++
 		return
 	}
@@ -220,7 +220,7 @@ func (c *Cursor) Down() {
 func (c *Cursor) searchDown(i *item) *item {
 	index := i.Locate()
 	if len(i.Parent.Tail) >= index+2 { // Can it move along parent's tail?
-		i = &i.Parent.Tail[index+1]
+		i = i.Parent.Tail[index+1]
 		c.y++
 		return i
 	}
