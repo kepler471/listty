@@ -1,8 +1,0 @@
-- example
-	- M:
-		- You chose to work in computer science when this was not such an
-			- obvious career choice.  Can you tell us about how you made this choice
-				- and what you think in retrospect about this choice?
-					- It's true that I started working with computers probably in the mid to
-						- late sixties, when things were fairly early on, and it was entirely by
-							- accident.  I think I saw my first computer in 1963; it was an old IBM
