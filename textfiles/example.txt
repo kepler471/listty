@@ -1,0 +1,25 @@
+- example
+- M:
+- You chose to work in computer science when this was not such an
+- obvious career choice.  Can you tell us about how you made this choice
+- and what you think in retrospect about this choice?
+- K:
+- It's true that I started working with computers probably in the mid to
+- late sixties, when things were fairly early on, and it was entirely by
+- accident.  I think I saw my first computer in 1963; it was an old IBM
+- 650.  I didn't do any serious programming until in 1964 when I was in
+- my last year of college.  But it was fun, and it was before computer
+- science was in any sense a field.  When I went to graduate school
+- there was a Computer Science program in the Electrical Engineering
+- Department at Princeton.  This was fairly typical of a lot of places:
+- computer science was not a separate academic field, it was just part
+- of some department that might have a computer or people interested in
+- computation, so I just backed into it, entirely by accident.  This has
+- been a lucky accident, because obviously the field has had a lot of
+- interesting things happen.
+- M:
+- You've been in this area for a long time, and you've been a very
+- important player in the evolution of computer science.  Some of your
+- work has had a profound impact.  Can you point out some things that
+- you consider fundamental advances in computer science in the last 30
+- years, some changes of paradigm that have happened?
