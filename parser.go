@@ -26,7 +26,7 @@ func parseTxt(filename string) *item {
 	lines := strings.Split(s, nextItem)
 	root := item{
 		Home: true,
-		Head: strings.TrimSuffix(path.Dir(filename), ".txt"),
+		Head: strings.TrimSuffix(path.Base(filename), ".txt"),
 	}
 	splitAndSearch(&root, -1, lines)
 	return &root
