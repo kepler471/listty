@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type item struct {
@@ -10,7 +9,6 @@ type item struct {
 	Parent *item
 	Head   string
 	Tail   []*item
-	depth  int
 }
 
 type TreeIteratee func(i *item)
@@ -80,14 +78,12 @@ func (i *item) MoveDown() {
 func (i *item) Indent() {
 	index := i.Locate()
 	i.Remove()
-	i.depth++
 	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, i)
 }
 
 // Unindent moves an item after its Parent item, in its Parent slice
 func (i *item) Unindent() {
 	i.Remove()
-	i.depth--
 	index := i.Parent.Locate()
 	i.Parent.AddSibling(i, index+1)
 }
@@ -114,7 +110,6 @@ func (i *item) InsertAlongside(j *item, index int) {
 func (i *item) AddSibling(j *item, index int) *item {
 	i.Parent.Tail = append(i.Parent.Tail, j)
 	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
-	j.depth = i.depth
 	i.Parent.Tail[index] = j
 	return j
 }
@@ -125,7 +120,7 @@ func (i *item) AddChild(j *item) {
 }
 func newItem(i *item) {
 	index := i.Locate()
-	blank := item{Parent: i.Parent, Head: strconv.Itoa(index + 1)} // printing index
+	blank := item{Parent: i.Parent, Head: "newItem"}
 	i.AddSibling(&blank, index+1)
 }
 
