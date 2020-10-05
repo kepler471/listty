@@ -19,10 +19,15 @@ var (
 )
 
 type Cursor struct {
-	x int
-	y int
-	i *item
+	x      int
+	y      int
+	i      *item
+	buffer string
 }
+
+// TODO: Support Indent and Unindent with cursor movement
+// There may be circumstances where the cursor will need to move after
+//	these actions (thinking mainly about when collapsibility is added.
 
 // Down moves cursor down a single row, and selects the correct item.
 func (c *Cursor) Down() {

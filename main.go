@@ -11,7 +11,7 @@ func main() {
 	root := parseTxt("text/example")
 
 	c := Cursor{
-		x: 5,
+		x: 0,
 		y: 0,
 		i: root.Tail[0],
 	}
