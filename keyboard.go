@@ -49,8 +49,18 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) {
 		c.i.Head = c.buffer
 		*m = false
 	case tcell.KeyUp:
+		if ev.Modifiers() == 2 {
+			c.i.MoveUp()
+			c.Up()
+			return
+		}
 		c.x = 0
 	case tcell.KeyDown:
+		if ev.Modifiers() == 2 {
+			c.i.MoveDown()
+			c.Down()
+			return
+		}
 		c.x = len(c.i.Head)
 	case tcell.KeyLeft:
 		if c.x > 0 {
@@ -89,13 +99,13 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode
 		// Delete an item, maybe with a double press, or a delete mode?
 	case tcell.KeyUp:
 		// S-up moves item up a tail
-		if ev.Modifiers() == 1 {
+		if ev.Modifiers() == 2 {
 			c.i.MoveUp()
 		}
 		c.Up()
 	case tcell.KeyDown:
 		// S-down moves item down a tail
-		if ev.Modifiers() == 1 {
+		if ev.Modifiers() == 2 {
 			c.i.MoveDown()
 		}
 		c.Down()

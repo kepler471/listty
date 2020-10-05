@@ -14,6 +14,9 @@ type item struct {
 type TreeIteratee func(i *item)
 type TailIteratee func(i *item, idx int)
 
+// TODO: Need to look at which methods should return pointers to items.
+// 	Would make tracking item movement much easier.
+
 func (i *item) Print() {
 	fmt.Println("Notes:")
 	for n := range i.Tail {
@@ -119,7 +122,6 @@ func (i *item) AddChild(j *item) {
 	i.AddSibling(j, index+1).Indent()
 }
 func newItem(i *item) {
-	// TODO: return pointer to new item
 	index := i.Locate()
 	blank := item{Parent: i.Parent, Head: "newItem"}
 	i.AddSibling(&blank, index+1)
