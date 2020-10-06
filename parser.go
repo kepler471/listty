@@ -26,7 +26,7 @@ func parseTxt(filename string) *item {
 	lines := strings.Split(s, nextItem)
 	root := item{
 		Home: true,
-		Head: strings.TrimSuffix(path.Base(filename), ".txt"),
+		Head: strings.TrimSpace(strings.TrimSuffix(path.Base(filename), ".txt")),
 	}
 	splitAndSearch(&root, -1, lines)
 	return &root
@@ -44,7 +44,8 @@ func splitAndSearch(i *item, depth int, lines []string) {
 			splits = append(splits, n)
 			line := item{
 				Parent: i,
-				Head:   strings.TrimLeft(l, "\t"),
+				// TODO: add single whitespace at line end
+				Head: strings.TrimSpace(l),
 			}
 			i.Tail = append(i.Tail, &line)
 		}
