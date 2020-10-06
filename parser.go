@@ -65,7 +65,7 @@ func splitAndSearch(i *item, depth int, lines []string) {
 const (
 	INDENTATION = "\t"
 	NEW_LINE    = "\n"
-	PREFIX      = "- "
+	PREFIX      = ""
 )
 
 type ItemIteratee = func(child *item, depth int)
