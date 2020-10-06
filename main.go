@@ -38,8 +38,6 @@ func main() {
 			f[row] = tabx * (len(m[row].PathTo(local)) - 1)
 			emitStr(s, lpad, tity+row, black, strings.Repeat(" ", f[row])+m[row].Head)
 
-			// As long as the cursor know which item to look at, it is found easily.
-			// This may lead to not having to use any movement methods on cursor.
 			if m[row] == c.i {
 				c.y = row
 			}

@@ -98,6 +98,8 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		c.i.Indent()
 	case tcell.KeyBacktab:
 		c.i.Unindent()
+	case tcell.KeyCtrlS:
+		treeToTxt(local, "text/example")
 	case tcell.KeyCtrlQ:
 		s.Fini()
 		os.Exit(0)
@@ -123,11 +125,13 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	case tcell.KeyUp:
 		if ev.Modifiers() == 1 {
 			c.i.MoveUp()
+			return
 		}
 		c.Up()
 	case tcell.KeyDown:
 		if ev.Modifiers() == 1 {
 			c.i.MoveDown()
+			return
 		}
 		c.Down()
 	case tcell.KeyLeft:
@@ -154,7 +158,7 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	case tcell.KeyBacktab:
 		c.i.Unindent()
 	case tcell.KeyCtrlS:
-		treeToTxt(local, "save")
+		treeToTxt(local, "text/example")
 	case tcell.KeyCtrlQ:
 		s.Fini()
 		os.Exit(0)
