@@ -1,11 +1,33 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
 	"github.com/mattn/go-runewidth"
 	"log"
 	"strings"
+)
+
+// Draw formatting
+const (
+	exit = 1 + iota
+	_
+	crsr
+	keys
+	mods
+	lpad   = 5
+	box0   = 0
+	boxy   = 6
+	boxl   = 41
+	boxr   = 1
+	tabx   = 4
+	tity   = 3
+	fily   = 0
+	pthy   = 1
+	crsfmt = "Cursor X: %v Y: %v a: %v"
+	keyfmt = "Keys: %s"
+	modfmt = "Mods: %s"
 )
 
 var (
@@ -17,64 +39,6 @@ var (
 		Foreground(tcell.ColorWhite).
 		Background(tcell.ColorBlack)
 )
-
-type Cursor struct {
-	x      int
-	y      int
-	i      *item
-	buffer string
-	m      EditMode
-}
-
-// TODO: Support Indent and Unindent with cursor movement
-// There may be circumstances where the cursor will need to move after
-//	these actions (thinking mainly about when collapsibility is added.
-
-// Down moves cursor down a single row, and selects the correct item.
-func (c *Cursor) Down() {
-	if len(c.i.Tail) > 0 {
-		c.i = c.i.Tail[0]
-		c.y++
-		return
-	}
-	c.i = c.searchDown(c.i)
-}
-
-// searchDown finds the next item in an ordered tree. If it cannot
-// find a suitable next item, it returns the original item.
-func (c *Cursor) searchDown(i *item) *item {
-	index := i.Locate()
-	if len(i.Parent.Tail) >= index+2 { // Can it move along parent's tail?
-		i = i.Parent.Tail[index+1]
-		c.y++
-		return i
-	}
-	if i.Parent.Parent == nil { // Protection searching above root
-		return c.i
-	}
-	return c.searchDown(i.Parent)
-}
-
-func (c *Cursor) Up() {
-	index := c.i.Locate()
-	if index == 0 {
-		if c.i.Parent.Parent == nil { // Protection searching above root
-			return
-		}
-		c.i = c.i.Parent
-		c.y--
-		return
-	}
-	c.i = c.searchUp(c.i.Parent.Tail[index-1]) // search on preceding sibling
-}
-
-func (c *Cursor) searchUp(i *item) *item {
-	if len(i.Tail) == 0 {
-		c.y--
-		return i
-	}
-	return c.searchUp(i.Tail[len(i.Tail)-1]) // recurse on the last item in the tail
-}
 
 func startup() tcell.Screen {
 	encoding.Register()
@@ -106,17 +70,6 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func (i *item) Plot(s tcell.Screen, m map[*item]int, style tcell.Style) {
-	if len(i.Tail) > 0 {
-		for _, t := range i.Tail {
-			depth := len(t.Path()) - 1
-			m[t]++
-			emitStr(s, 5, 5+m[t], style, strings.Repeat("\t", depth)+t.Head)
-			t.Plot(s, m, style)
-		}
-	}
-}
-
 func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, r rune) {
 	if y2 < y1 {
 		y1, y2 = y2, y1
@@ -143,6 +96,32 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, r rune) {
 	for row := y1 + 1; row < y2; row++ {
 		for col := x1 + 1; col < x2; col++ {
 			s.SetContent(col, row, r, nil, style)
+		}
+	}
+}
+
+func drawInfo(s tcell.Screen, c *Cursor, local *item) {
+	width, _ := s.Size()
+	// Info bar
+	emitStr(s, lpad, fily, black, "File: "+local.Head)
+	emitStr(s, lpad, pthy, black, "Item path: "+strings.Join(c.i.Path(), " > "))
+
+	// Info box
+	drawBox(s, width-boxl, box0, width-boxr, boxy, white, ' ')
+	emitStr(s, width-(boxl-boxr), exit, white, "Press Ctrl-Q to exit")
+	emitStr(s, width-(boxl-boxr), crsr, white, fmt.Sprintf(crsfmt, c.x, c.y, string(c.i.Head[c.x])))
+	emitStr(s, width-(boxl-boxr), keys, white, fmt.Sprintf(keyfmt, c.lks))
+	emitStr(s, width-(boxl-boxr), mods, white, fmt.Sprintf(modfmt, c.mks))
+
+}
+
+func (i *item) Plot(s tcell.Screen, m map[*item]int, style tcell.Style) {
+	if len(i.Tail) > 0 {
+		for _, t := range i.Tail {
+			depth := len(t.Path()) - 1
+			m[t]++
+			emitStr(s, 5, 5+m[t], style, strings.Repeat("\t", depth)+t.Head)
+			t.Plot(s, m, style)
 		}
 	}
 }
