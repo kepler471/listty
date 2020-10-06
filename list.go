@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type item struct {
@@ -10,11 +9,13 @@ type item struct {
 	Parent *item
 	Head   string
 	Tail   []*item
-	depth  int
 }
 
 type TreeIteratee func(i *item)
 type TailIteratee func(i *item, idx int)
+
+// TODO: Need to look at which methods should return pointers to items.
+// 	Would make tracking item movement much easier.
 
 func (i *item) Print() {
 	fmt.Println("Notes:")
@@ -34,8 +35,9 @@ func (i *item) StringChildren() (s string) {
 	return
 }
 
+// Path returns a slice of items from root to i.
 func (i *item) Path() []string {
-	p := []string{""}
+	var p []string
 	return reverse(i.path(p))
 }
 
@@ -45,6 +47,20 @@ func (i *item) path(p []string) []string {
 		return p
 	}
 	return i.Parent.path(p)
+}
+
+// Path returns a slice of items from j to i.
+func (i *item) PathTo(j *item) []string {
+	var p []string
+	return reverse(i.pathTo(j, p))
+}
+
+func (i *item) pathTo(j *item, p []string) []string {
+	p = append(p, i.Head)
+	if i.Parent == j {
+		return p
+	}
+	return i.Parent.pathTo(j, p)
 }
 
 func reverse(s []string) []string {
@@ -58,6 +74,10 @@ func reverse(s []string) []string {
 func (i *item) Remove() {
 	index := i.Locate()
 	i.Parent.Tail = append(i.Parent.Tail[:index], i.Parent.Tail[index+1:]...)
+}
+
+func swapItem(tail []*item, current, next int) {
+	tail[current], tail[next] = tail[next], tail[current]
 }
 
 func (i *item) MoveUp() {
@@ -76,30 +96,41 @@ func (i *item) MoveDown() {
 	swapItem(i.Parent.Tail, index, index+1)
 }
 
+// Locate returns the index value for the selected item, within its parent's tail
+func (i *item) Locate() int {
+	var loc int
+	for index := range i.Parent.Tail {
+		if i == i.Parent.Tail[index] {
+			loc = index
+		}
+	}
+	return loc
+}
+
 // Indent moves the item to the end of the preceding item's tail
-func (i *item) Indent() {
+func (i *item) Indent() *item {
 	index := i.Locate()
+	if index == 0 {
+		return i
+	}
+	j := i.Parent.Tail[index-1]
 	i.Remove()
-	i.depth++
-	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, i)
+	j.Tail = append(j.Tail, i)
+	i.Parent = j
+	return i
 }
 
 // Unindent moves an item after its Parent item, in its Parent slice
-func (i *item) Unindent() {
-	i.Remove()
-	i.depth--
+func (i *item) Unindent() *item {
+	if i.Parent.Home {
+		return i
+	}
+	j := i.Parent.Parent
 	index := i.Parent.Locate()
 	i.Parent.AddSibling(i, index+1)
-}
-
-// Locate returns the index value for the selected item, within its parent's tail
-func (i *item) Locate() (index int) {
-	for index = range i.Parent.Tail {
-		if i == i.Parent.Tail[index] {
-			return
-		}
-	}
-	return
+	i.Remove()
+	i.Parent = j
+	return i
 }
 
 // InsertAlongside places itself next to a target item
@@ -109,28 +140,26 @@ func (i *item) InsertAlongside(j *item, index int) {
 	j.Parent.Tail[index] = i
 }
 
-// AddSibling places the target item alongside itself in its
-// parent's tail
+// AddSibling places the target item j alongside i in i's
+// parent's tail. Usuall, is called with index = i.Locate()+1.
 func (i *item) AddSibling(j *item, index int) *item {
 	i.Parent.Tail = append(i.Parent.Tail, j)
 	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
-	j.depth = i.depth
 	i.Parent.Tail[index] = j
 	return j
 }
 
-func (i *item) AddChild(j *item) {
+func (i *item) AddChild(j *item) *item {
 	index := i.Locate()
 	i.AddSibling(j, index+1).Indent()
-}
-func newItem(i *item) {
-	index := i.Locate()
-	blank := item{Parent: i.Parent, Head: strconv.Itoa(index + 1)} // printing index
-	i.AddSibling(&blank, index+1)
+	return j
 }
 
-func swapItem(tail []*item, current, next int) {
-	tail[current], tail[next] = tail[next], tail[current]
+func newItem(i *item) *item {
+	index := i.Locate()
+	j := item{Parent: i.Parent, Head: "~"}
+	i.AddSibling(&j, index+1)
+	return &j
 }
 
 // invoke TreeIteratee on each item in Tail
@@ -170,5 +199,16 @@ func _toLastItemInStack(root *item, stack *PositionStack, iteratee TreeIteratee,
 		iteratee(root)
 	} else {
 		_toLastItemInStack(root.Tail[stack.GetRow(count)], stack, iteratee, count+1)
+	}
+}
+
+// TreeMap build a flat data structure for an item tree, with row numbers for easy
+// printing to screen.
+func TreeMap(i *item, m map[int]*item) {
+	if !i.IsLeaf() {
+		for _, t := range i.Tail {
+			m[len(m)] = t
+			TreeMap(t, m)
+		}
 	}
 }
