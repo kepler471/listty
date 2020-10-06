@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gdamore/tcell/v2"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -11,11 +12,29 @@ import (
 // 	the tree manipulation actions.
 type EditMode bool
 
-func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) {
-	if *m {
-		handleEdit(ev, s, c, nil)
+// ModeError is used to catch and error during mode switch
+type ModeError struct {
+	EditMode EditMode
+}
+
+func (m *ModeError) Error() string {
+	return "EditMode was " + strconv.FormatBool(bool(m.EditMode)) + " but was not flipped to " + strconv.FormatBool(bool(!m.EditMode))
+}
+
+func changeMode(c *Cursor) error {
+	clone := c
+	c.m = !c.m
+	if clone != c {
+		return &ModeError{EditMode: c.m}
+	}
+	return nil
+}
+
+func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
+	if c.m {
+		handleEdit(ev, s, c, loc)
 	} else {
-		handleManipulate(ev, s, c, nil)
+		handleManipulate(ev, s, c, loc)
 	}
 }
 
@@ -23,7 +42,7 @@ func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) 
 // Text editing is handled in a naive manner, writing directly to the item head,
 // and moving the cursor as an index of the head string, c.x. c.x will point to
 // the position
-func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) {
+func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 		c.buffer = ""
@@ -40,40 +59,36 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) {
 			c.Down()
 			return // to maintain editing state
 		}
-
-		// C-S-Enter could create a new item above, and saves and changes
-		// 	if in edit mode, however it seems difficult to access this keybind.
-
-		*m = false
+		_ = changeMode(c)
 	case tcell.KeyEscape:
 		c.i.Head = c.buffer
-		*m = false
+		_ = changeMode(c)
 	case tcell.KeyUp:
-		if ev.Modifiers() == 2 {
+		if ev.Modifiers() == 1 {
 			c.i.MoveUp()
 			c.Up()
 			return
 		}
 		c.x = 0
 	case tcell.KeyDown:
-		if ev.Modifiers() == 2 {
+		if ev.Modifiers() == 1 {
 			c.i.MoveDown()
 			c.Down()
 			return
 		}
-		c.x = len(c.i.Head)
+		c.x = len(c.i.Head) - 1
 	case tcell.KeyLeft:
 		if c.x > 0 {
 			c.x--
 		}
 	case tcell.KeyRight:
-		if c.x < len(c.i.Head) {
+		if c.x < len(c.i.Head)-1 {
 			c.x++
 		}
 	case tcell.KeyRune:
 		c.i.Head = c.i.Head[:c.x] + string(ev.Rune()) + c.i.Head[c.x:]
 		c.x++
-	case tcell.KeyBackspace2:
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		c.i.Head = c.i.Head[:c.x-1] + c.i.Head[c.x:]
 		c.x--
 	case tcell.KeyTab:
@@ -84,7 +99,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) {
 }
 
 // handleManipulate controls the keyboard actions when not in EditMode
-func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode) {
+func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 		// S-Enter creates a new item below cursor
@@ -94,33 +109,37 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode
 		}
 		// Enter edit mode at cursor
 		c.buffer = c.i.Head
-		*m = true
-	case tcell.KeyBackspace2:
-		// Delete an item, maybe with a double press, or a delete mode?
+		_ = changeMode(c)
+	case tcell.KeyDelete:
 	case tcell.KeyUp:
-		// S-up moves item up a tail
-		if ev.Modifiers() == 2 {
+		if ev.Modifiers() == 1 {
 			c.i.MoveUp()
 		}
 		c.Up()
 	case tcell.KeyDown:
-		// S-down moves item down a tail
-		if ev.Modifiers() == 2 {
+		if ev.Modifiers() == 1 {
 			c.i.MoveDown()
 		}
 		c.Down()
 	case tcell.KeyLeft:
 		if ev.Modifiers() == 2 {
-			// View parent of local root (dive out)
-			// return
+			// Increase scope to parent of current top level item (dive out)
+			if c.i.Parent != nil {
+				loc = c.i.Parent
+			}
+			return
 		}
-		// Collapse
+		// Collapse selected item
 	case tcell.KeyRight:
 		if ev.Modifiers() == 2 {
-			// Set current item as local root (dive in)
-			// return
+			// Set selected item as top level item (dive in)
+			// For now, limit to non-leaf items, as unsure how app handles for empty tails
+			if !c.i.IsLeaf() {
+				loc = c.i
+			}
+			return
 		}
-		// Expand
+		// Expand selected item
 	case tcell.KeyTab:
 		c.i.Indent()
 	case tcell.KeyBacktab:
@@ -129,6 +148,10 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, m *EditMode
 		switch strings.ToLower(string(ev.Rune())) {
 		case "d":
 			// Duplicate selected item
+		case ",":
+			c.i.Unindent()
+		case ".":
+			c.i.Indent()
 		case "q":
 			s.Fini()
 			os.Exit(0)
