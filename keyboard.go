@@ -34,7 +34,7 @@ func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) 
 	if c.m {
 		handleEdit(ev, s, c, local)
 	} else {
-		handleManipulate(ev, s, c, local)
+		handleSelect(ev, s, c, local)
 	}
 }
 
@@ -104,8 +104,8 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	}
 }
 
-// handleManipulate controls the keyboard actions when not in EditMode
-func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
+// handleSelect controls the keyboard actions when not in EditMode
+func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 
