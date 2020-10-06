@@ -12,7 +12,7 @@ import (
 // Draw formatting
 const (
 	exit = 1 + iota
-	_
+	save
 	crsr
 	keys
 	mods
@@ -109,6 +109,7 @@ func drawInfo(s tcell.Screen, c *Cursor, local *item) {
 	// Info box
 	drawBox(s, width-boxl, box0, width-boxr, boxy, white, ' ')
 	emitStr(s, width-(boxl-boxr), exit, white, "Press Ctrl-Q to exit")
+	emitStr(s, width-(boxl-boxr), save, white, "Press Ctrl-S to save")
 	emitStr(s, width-(boxl-boxr), crsr, white, fmt.Sprintf(crsfmt, c.x, c.y, string(c.i.Head[c.x])))
 	emitStr(s, width-(boxl-boxr), keys, white, fmt.Sprintf(keyfmt, c.lks))
 	emitStr(s, width-(boxl-boxr), mods, white, fmt.Sprintf(modfmt, c.mks))
