@@ -23,6 +23,7 @@ type Cursor struct {
 	y      int
 	i      *item
 	buffer string
+	m      EditMode
 }
 
 // TODO: Support Indent and Unindent with cursor movement
