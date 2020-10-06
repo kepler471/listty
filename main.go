@@ -27,7 +27,7 @@ func main() {
 			c.i.Head += " "
 		}
 
-		//s.Clear() // unsure how tcell Clear works
+		s.Clear() // unsure how tcell Clear works
 		// test further if any chars are deleted or left after deletion
 
 		m := make(map[int]*item)
@@ -37,6 +37,12 @@ func main() {
 		for row := 0; row < len(m); row++ {
 			f[row] = tabx * (len(m[row].PathTo(local)) - 1)
 			emitStr(s, lpad, tity+row, black, strings.Repeat(" ", f[row])+m[row].Head)
+
+			// As long as the cursor know which item to look at, it is found easily.
+			// This may lead to not having to use any movement methods on cursor.
+			if m[row] == c.i {
+				c.y = row
+			}
 		}
 
 		// Cursor
@@ -46,6 +52,7 @@ func main() {
 
 		s.Show()
 
+		// Events
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
