@@ -35,8 +35,9 @@ func (i *item) StringChildren() (s string) {
 	return
 }
 
+// Path returns a slice of items from root to i.
 func (i *item) Path() []string {
-	p := []string{""}
+	var p []string
 	return reverse(i.path(p))
 }
 
@@ -46,6 +47,20 @@ func (i *item) path(p []string) []string {
 		return p
 	}
 	return i.Parent.path(p)
+}
+
+// Path returns a slice of items from j to i.
+func (i *item) PathTo(j *item) []string {
+	var p []string
+	return reverse(i.pathTo(j, p))
+}
+
+func (i *item) pathTo(j *item, p []string) []string {
+	p = append(p, i.Head)
+	if i.Parent == j {
+		return p
+	}
+	return i.Parent.pathTo(j, p)
 }
 
 func reverse(s []string) []string {
@@ -168,5 +183,16 @@ func _toLastItemInStack(root *item, stack *PositionStack, iteratee TreeIteratee,
 		iteratee(root)
 	} else {
 		_toLastItemInStack(root.Tail[stack.GetRow(count)], stack, iteratee, count+1)
+	}
+}
+
+// TreeMap build a flat data structure for an item tree, with row numbers for easy
+// printing to screen.
+func TreeMap(i *item, m map[int]*item) {
+	if !i.IsLeaf() {
+		for _, t := range i.Tail {
+			m[len(m)] = t
+			TreeMap(t, m)
+		}
 	}
 }
