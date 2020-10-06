@@ -89,8 +89,10 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
 		c.i.Head = c.i.Head[:c.x] + string(ev.Rune()) + c.i.Head[c.x:]
 		c.x++
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		c.i.Head = c.i.Head[:c.x-1] + c.i.Head[c.x:]
-		c.x--
+		if c.x != 0 {
+			c.i.Head = c.i.Head[:c.x-1] + c.i.Head[c.x:]
+			c.x--
+		}
 	case tcell.KeyTab:
 		c.i.Indent()
 	case tcell.KeyBacktab:
@@ -144,6 +146,9 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) 
 		c.i.Indent()
 	case tcell.KeyBacktab:
 		c.i.Unindent()
+	case tcell.KeyCtrlQ:
+		s.Fini()
+		os.Exit(0)
 	case tcell.KeyRune:
 		switch strings.ToLower(string(ev.Rune())) {
 		case "d":
@@ -152,9 +157,6 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) 
 			c.i.Unindent()
 		case ".":
 			c.i.Indent()
-		case "q":
-			s.Fini()
-			os.Exit(0)
 		}
 	}
 }
