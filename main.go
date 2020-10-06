@@ -46,7 +46,12 @@ func main() {
 		}
 
 		// Cursor
-		s.ShowCursor(5+f[c.y]+c.x, 3+c.y)
+		if c.m {
+			s.ShowCursor(5+f[c.y]+c.x, 3+c.y)
+		} else {
+			s.HideCursor()
+			emitStr(s, 5+f[c.y], 3+c.y, white, c.i.Head)
+		}
 
 		drawInfo(s, &c, local)
 
