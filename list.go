@@ -76,6 +76,10 @@ func (i *item) Remove() {
 	i.Parent.Tail = append(i.Parent.Tail[:index], i.Parent.Tail[index+1:]...)
 }
 
+func swapItem(tail []*item, current, next int) {
+	tail[current], tail[next] = tail[next], tail[current]
+}
+
 func (i *item) MoveUp() {
 	index := i.Locate()
 	if index == 0 {
@@ -92,28 +96,41 @@ func (i *item) MoveDown() {
 	swapItem(i.Parent.Tail, index, index+1)
 }
 
+// Locate returns the index value for the selected item, within its parent's tail
+func (i *item) Locate() int {
+	var loc int
+	for index := range i.Parent.Tail {
+		if i == i.Parent.Tail[index] {
+			loc = index
+		}
+	}
+	return loc
+}
+
 // Indent moves the item to the end of the preceding item's tail
-func (i *item) Indent() {
+func (i *item) Indent() *item {
 	index := i.Locate()
+	if index == 0 {
+		return i
+	}
+	j := i.Parent.Tail[index-1]
 	i.Remove()
-	i.Parent.Tail[index-1].Tail = append(i.Parent.Tail[index-1].Tail, i)
+	j.Tail = append(j.Tail, i)
+	i.Parent = j
+	return i
 }
 
 // Unindent moves an item after its Parent item, in its Parent slice
-func (i *item) Unindent() {
-	i.Remove()
+func (i *item) Unindent() *item {
+	if i.Parent.Home {
+		return i
+	}
+	j := i.Parent.Parent
 	index := i.Parent.Locate()
 	i.Parent.AddSibling(i, index+1)
-}
-
-// Locate returns the index value for the selected item, within its parent's tail
-func (i *item) Locate() (index int) {
-	for index = range i.Parent.Tail {
-		if i == i.Parent.Tail[index] {
-			return
-		}
-	}
-	return
+	i.Remove()
+	i.Parent = j
+	return i
 }
 
 // InsertAlongside places itself next to a target item
@@ -123,8 +140,8 @@ func (i *item) InsertAlongside(j *item, index int) {
 	j.Parent.Tail[index] = i
 }
 
-// AddSibling places the target item alongside itself in its
-// parent's tail
+// AddSibling places the target item j alongside i in i's
+// parent's tail. Usuall, is called with index = i.Locate()+1.
 func (i *item) AddSibling(j *item, index int) *item {
 	i.Parent.Tail = append(i.Parent.Tail, j)
 	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
@@ -140,10 +157,6 @@ func newItem(i *item) {
 	index := i.Locate()
 	blank := item{Parent: i.Parent, Head: "newItem"}
 	i.AddSibling(&blank, index+1)
-}
-
-func swapItem(tail []*item, current, next int) {
-	tail[current], tail[next] = tail[next], tail[current]
 }
 
 // invoke TreeIteratee on each item in Tail
