@@ -47,33 +47,34 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	case tcell.KeyEnter:
 		c.buffer = ""
 
-		// S-Enter creates a new item below, and saves any changes
 		if ev.Modifiers() == 1 {
-			// TODO: newItem needs fixing
-			// It needs to be aware of the current item's tail, and should
-			// 	add if there is a tail, that is expanded, it should add to
-			// 	the top of that tail.
-			// It seems like the pointer to the new item should be returned,
-			// 	which could be a way to ensure cursor is directed correctly.
-			newItem(c.i)
-			c.Down()
+			switch {
+			case c.x == 0:
+				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: "@"}, c.i.Locate())
+			case len(c.i.Tail) > 0:
+				c.i = c.i.Tail[0].AddSibling(&item{Parent: c.i, Head: "%"}, 0)
+			case len(c.i.Tail) == 0:
+				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: "&"}, c.i.Locate()+1)
+			}
+			c.x = 0
 			return // to maintain editing state
+
 		}
 		_ = changeMode(c)
 	case tcell.KeyEscape:
+		c.x = 0
 		c.i.Head = c.buffer
+		c.buffer = ""
 		_ = changeMode(c)
 	case tcell.KeyUp:
 		if ev.Modifiers() == 1 {
 			c.i.MoveUp()
-			c.Up()
 			return
 		}
 		c.x = 0
 	case tcell.KeyDown:
 		if ev.Modifiers() == 1 {
 			c.i.MoveDown()
-			c.Down()
 			return
 		}
 		c.x = len(c.i.Head) - 1
@@ -97,6 +98,9 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		c.i.Indent()
 	case tcell.KeyBacktab:
 		c.i.Unindent()
+	case tcell.KeyCtrlQ:
+		s.Fini()
+		os.Exit(0)
 	}
 }
 
@@ -104,10 +108,13 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
-		// S-Enter creates a new item below cursor
+
 		if ev.Modifiers() == 1 {
-			newItem(c.i)
-			c.Down()
+			if len(c.i.Tail) > 0 {
+				c.i = c.i.Tail[0].AddSibling(&item{Parent: c.i, Head: "~"}, 0)
+			} else {
+				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: "#"}, c.i.Locate()+1)
+			}
 		}
 		// Enter edit mode at cursor
 		c.buffer = c.i.Head

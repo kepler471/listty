@@ -149,14 +149,17 @@ func (i *item) AddSibling(j *item, index int) *item {
 	return j
 }
 
-func (i *item) AddChild(j *item) {
+func (i *item) AddChild(j *item) *item {
 	index := i.Locate()
 	i.AddSibling(j, index+1).Indent()
+	return j
 }
-func newItem(i *item) {
+
+func newItem(i *item) *item {
 	index := i.Locate()
-	blank := item{Parent: i.Parent, Head: "newItem"}
-	i.AddSibling(&blank, index+1)
+	j := item{Parent: i.Parent, Head: "~"}
+	i.AddSibling(&j, index+1)
+	return &j
 }
 
 // invoke TreeIteratee on each item in Tail
