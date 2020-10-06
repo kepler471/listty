@@ -12,7 +12,7 @@ import (
 // 	the tree manipulation actions.
 type EditMode bool
 
-// ModeError is used to catch and error during mode switch
+// ModeError is used to catch an error during mode switch
 type ModeError struct {
 	EditMode EditMode
 }
@@ -30,11 +30,11 @@ func changeMode(c *Cursor) error {
 	return nil
 }
 
-func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
+func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	if c.m {
-		handleEdit(ev, s, c, loc)
+		handleEdit(ev, s, c, local)
 	} else {
-		handleManipulate(ev, s, c, loc)
+		handleManipulate(ev, s, c, local)
 	}
 }
 
@@ -42,7 +42,7 @@ func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
 // Text editing is handled in a naive manner, writing directly to the item head,
 // and moving the cursor as an index of the head string, c.x. c.x will point to
 // the position
-func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
+func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 		c.buffer = ""
@@ -101,7 +101,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
 }
 
 // handleManipulate controls the keyboard actions when not in EditMode
-func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) {
+func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 		// S-Enter creates a new item below cursor
@@ -127,7 +127,7 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) 
 		if ev.Modifiers() == 2 {
 			// Increase scope to parent of current top level item (dive out)
 			if c.i.Parent != nil {
-				loc = c.i.Parent
+				local = c.i.Parent
 			}
 			return
 		}
@@ -136,8 +136,8 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) 
 		if ev.Modifiers() == 2 {
 			// Set selected item as top level item (dive in)
 			// For now, limit to non-leaf items, as unsure how app handles for empty tails
-			if !c.i.IsLeaf() {
-				loc = c.i
+			if len(c.i.Tail) != 0 {
+				local = c.i
 			}
 			return
 		}
@@ -146,6 +146,8 @@ func handleManipulate(ev *tcell.EventKey, s tcell.Screen, c *Cursor, loc *item) 
 		c.i.Indent()
 	case tcell.KeyBacktab:
 		c.i.Unindent()
+	case tcell.KeyCtrlS:
+		treeToTxt(local, "save")
 	case tcell.KeyCtrlQ:
 		s.Fini()
 		os.Exit(0)
