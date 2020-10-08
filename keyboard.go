@@ -118,7 +118,8 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: "#"}, c.i.Locate()+1)
 			}
 		}
-		// Enter edit mode at cursor
+
+		c.x = 0
 		c.buffer = c.i.Head
 		_ = changeMode(c)
 	case tcell.KeyDelete:
