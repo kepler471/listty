@@ -46,7 +46,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	switch ev.Key() {
 	// TODO: add some comments describing key actions
 	case tcell.KeyEnter:
-		c.buffer = ""
+		c.ClearBuffer()
 
 		if ev.Modifiers() == 1 {
 			switch {
@@ -57,16 +57,15 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 			case len(c.i.Tail) == 0:
 				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: " "}, c.i.Locate()+1)
 			}
-			c.x = 0
+			c.ResetX()
 			return // to maintain editing state
 
 		}
 		_ = changeMode(c)
 
 	case tcell.KeyEscape:
-		c.x = 0
-		c.i.Head = c.buffer
-		c.buffer = ""
+		c.ResetX()
+		c.UnsetBuffer()
 		_ = changeMode(c)
 
 	case tcell.KeyUp:
@@ -75,7 +74,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 			return
 		}
 
-		c.x = 0
+		c.ResetX()
 
 		// If c.x = 0, then pressing up again could take you out of edit mode?
 		// Maybe on a double press? Same with down? What if they
@@ -146,8 +145,8 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 			}
 		}
 
-		c.x = 0
-		c.buffer = c.i.Head
+		c.ResetX()
+		c.SetBuffer()
 		_ = changeMode(c)
 
 	case tcell.KeyDelete:

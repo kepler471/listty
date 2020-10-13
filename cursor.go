@@ -18,7 +18,7 @@ type Cursor struct {
 func (c *Cursor) Down() {
 	if len(c.i.Tail) > 0 {
 		c.i = c.i.Tail[0]
-		c.x = 0
+		c.ResetX()
 		c.y++
 		return
 	}
@@ -31,7 +31,7 @@ func (c *Cursor) SearchDown(i *item) *item {
 	index := i.Locate()
 	if len(i.Parent.Tail) >= index+2 { // Can it move along parent's tail?
 		i = i.Parent.Tail[index+1]
-		c.x = 0
+		c.ResetX()
 		c.y++
 		return i
 	}
@@ -48,7 +48,7 @@ func (c *Cursor) Up() {
 			return
 		}
 		c.i = c.i.Parent
-		c.x = 0
+		c.ResetX()
 		c.y--
 		return
 	}
@@ -57,9 +57,26 @@ func (c *Cursor) Up() {
 
 func (c *Cursor) SearchUp(i *item) *item {
 	if len(i.Tail) == 0 {
-		c.x = 0
+		c.ResetX()
 		c.y--
 		return i
 	}
 	return c.SearchUp(i.Tail[len(i.Tail)-1]) // recurse on the last item in the tail
+}
+
+func (c *Cursor) ResetX() {
+	c.x = 0
+}
+
+func (c *Cursor) ClearBuffer() {
+	c.buffer = ""
+}
+
+func (c *Cursor) SetBuffer() {
+	c.buffer = c.i.Head
+}
+
+func (c *Cursor) UnsetBuffer() {
+	c.i.Head = c.buffer
+	c.ClearBuffer()
 }
