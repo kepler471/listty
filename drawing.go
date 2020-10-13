@@ -11,7 +11,7 @@ import (
 
 // Draw formatting
 const (
-	exit = 1 + iota
+	exit = iota + 1
 	save
 	crsr
 	keys
