@@ -8,6 +8,16 @@ type Cursor struct {
 	m      EditMode
 	lks    string
 	mks    string
+	// TODO: compose item with cursor?
+	// 	makes changes globally and test.
+	//*item
+}
+
+func NewCursor(i *item) Cursor {
+	return Cursor{
+		i: i.Tail[0],
+		m: EditMode(false),
+	}
 }
 
 // TODO: Support Indent and Unindent with cursor movement
@@ -80,3 +90,5 @@ func (c *Cursor) UnsetBuffer() {
 	c.i.Head = c.buffer
 	c.ClearBuffer()
 }
+
+// TODO: add c.x inc/dec methods
