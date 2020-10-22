@@ -15,7 +15,7 @@ type Cursor struct {
 
 func NewCursor(i *item) Cursor {
 	return Cursor{
-		i: i.Tail[0],
+		i: i.Children[0],
 		m: EditMode(false),
 	}
 }
@@ -26,8 +26,8 @@ func NewCursor(i *item) Cursor {
 
 // Down moves cursor down a single row, and selects the correct item.
 func (c *Cursor) Down() {
-	if len(c.i.Tail) > 0 {
-		c.i = c.i.Tail[0]
+	if len(c.i.Children) > 0 {
+		c.i = c.i.Children[0]
 		c.ResetX()
 		c.y++
 		return
@@ -39,8 +39,8 @@ func (c *Cursor) Down() {
 // find a suitable next item, it returns the original item.
 func (c *Cursor) SearchDown(i *item) *item {
 	index := i.Locate()
-	if len(i.Parent.Tail) >= index+2 { // Can it move along parent's tail?
-		i = i.Parent.Tail[index+1]
+	if len(i.Parent.Children) >= index+2 { // Can it move along parent's tail?
+		i = i.Parent.Children[index+1]
 		c.ResetX()
 		c.y++
 		return i
@@ -62,16 +62,16 @@ func (c *Cursor) Up() {
 		c.y--
 		return
 	}
-	c.i = c.SearchUp(c.i.Parent.Tail[index-1]) // search on preceding sibling
+	c.i = c.SearchUp(c.i.Parent.Children[index-1]) // search on preceding sibling
 }
 
 func (c *Cursor) SearchUp(i *item) *item {
-	if len(i.Tail) == 0 {
+	if len(i.Children) == 0 {
 		c.ResetX()
 		c.y--
 		return i
 	}
-	return c.SearchUp(i.Tail[len(i.Tail)-1]) // recurse on the last item in the tail
+	return c.SearchUp(i.Children[len(i.Children)-1]) // recurse on the last item in the tail
 }
 
 func (c *Cursor) ResetX() {
@@ -83,11 +83,11 @@ func (c *Cursor) ClearBuffer() {
 }
 
 func (c *Cursor) SetBuffer() {
-	c.buffer = c.i.Head
+	c.buffer = c.i.Text
 }
 
 func (c *Cursor) UnsetBuffer() {
-	c.i.Head = c.buffer
+	c.i.Text = c.buffer
 	c.ClearBuffer()
 }
 

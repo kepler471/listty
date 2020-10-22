@@ -5,10 +5,10 @@ import (
 )
 
 type item struct {
-	Home   bool
-	Parent *item
-	Head   string
-	Tail   []*item
+	Root     bool
+	Text     string
+	Parent   *item
+	Children []*item
 }
 
 type TreeIteratee func(i *item)
@@ -19,18 +19,18 @@ type TailIteratee func(i *item, idx int)
 
 func (i *item) Print() {
 	fmt.Println("Notes:")
-	for n := range i.Tail {
-		fmt.Printf("\t %v\t%p\n", i.Tail[n].Head, &i.Tail[n])
+	for n := range i.Children {
+		fmt.Printf("\t %v\t%p\n", i.Children[n].Text, &i.Children[n])
 	}
 }
 
 func (i *item) IsLeaf() bool {
-	return i.Tail == nil || len(i.Tail) == 0
+	return i.Children == nil || len(i.Children) == 0
 }
 
 func (i *item) StringChildren() (s string) {
-	for index := range i.Tail {
-		s += i.Tail[index].Head + ","
+	for index := range i.Children {
+		s += i.Children[index].Text + ","
 	}
 	return
 }
@@ -42,7 +42,7 @@ func (i *item) Path() []string {
 }
 
 func (i *item) path(p []string) []string {
-	p = append(p, i.Head)
+	p = append(p, i.Text)
 	if i.Parent == nil {
 		return p
 	}
@@ -56,7 +56,7 @@ func (i *item) PathTo(j *item) []string {
 }
 
 func (i *item) pathTo(j *item, p []string) []string {
-	p = append(p, i.Head)
+	p = append(p, i.Text)
 	if i.Parent == j {
 		return p
 	}
@@ -73,7 +73,7 @@ func reverse(s []string) []string {
 // Remove the item from its parent's tail
 func (i *item) Remove() {
 	index := i.Locate()
-	i.Parent.Tail = append(i.Parent.Tail[:index], i.Parent.Tail[index+1:]...)
+	i.Parent.Children = append(i.Parent.Children[:index], i.Parent.Children[index+1:]...)
 }
 
 func swapItem(tail []*item, current, next int) {
@@ -85,22 +85,22 @@ func (i *item) MoveUp() {
 	if index == 0 {
 		return
 	}
-	swapItem(i.Parent.Tail, index, index-1)
+	swapItem(i.Parent.Children, index, index-1)
 }
 
 func (i *item) MoveDown() {
 	index := i.Locate()
-	if index == len(i.Parent.Tail)-1 {
+	if index == len(i.Parent.Children)-1 {
 		return
 	}
-	swapItem(i.Parent.Tail, index, index+1)
+	swapItem(i.Parent.Children, index, index+1)
 }
 
 // Locate returns the index value for the selected item, within its parent's tail
 func (i *item) Locate() int {
 	var loc int
-	for index := range i.Parent.Tail {
-		if i == i.Parent.Tail[index] {
+	for index := range i.Parent.Children {
+		if i == i.Parent.Children[index] {
 			loc = index
 		}
 	}
@@ -113,16 +113,16 @@ func (i *item) Indent() *item {
 	if index == 0 {
 		return i
 	}
-	j := i.Parent.Tail[index-1]
+	j := i.Parent.Children[index-1]
 	i.Remove()
-	j.Tail = append(j.Tail, i)
+	j.Children = append(j.Children, i)
 	i.Parent = j
 	return i
 }
 
 // Unindent moves an item after its Parent item, in its Parent slice
 func (i *item) Unindent() *item {
-	if i.Parent.Home {
+	if i.Parent.Root {
 		return i
 	}
 	j := i.Parent.Parent
@@ -135,17 +135,17 @@ func (i *item) Unindent() *item {
 
 // InsertAlongside places itself next to a target item
 func (i *item) InsertAlongside(j *item, index int) {
-	j.Parent.Tail = append(j.Parent.Tail, i)
-	copy(j.Parent.Tail[index+1:], j.Parent.Tail[index:])
-	j.Parent.Tail[index] = i
+	j.Parent.Children = append(j.Parent.Children, i)
+	copy(j.Parent.Children[index+1:], j.Parent.Children[index:])
+	j.Parent.Children[index] = i
 }
 
 // AddSibling places the target item j alongside i in i's
 // parent's tail. Usuall, is called with index = i.Locate()+1.
 func (i *item) AddSibling(j *item, index int) *item {
-	i.Parent.Tail = append(i.Parent.Tail, j)
-	copy(i.Parent.Tail[index+1:], i.Parent.Tail[index:])
-	i.Parent.Tail[index] = j
+	i.Parent.Children = append(i.Parent.Children, j)
+	copy(i.Parent.Children[index+1:], i.Parent.Children[index:])
+	i.Parent.Children[index] = j
 	return j
 }
 
@@ -157,19 +157,19 @@ func (i *item) AddChild(j *item) *item {
 
 func newItem(i *item) *item {
 	index := i.Locate()
-	j := item{Parent: i.Parent, Head: "~"}
+	j := item{Parent: i.Parent, Text: "~"}
 	i.AddSibling(&j, index+1)
 	return &j
 }
 
-// invoke TreeIteratee on each item in Tail
+// invoke TreeIteratee on each item in Children
 func (i *item) ForEachChild(iteratee TailIteratee) {
-	if i.Tail == nil {
+	if i.Children == nil {
 		return
 	}
 
-	for j := 0; j < len(i.Tail); j++ {
-		curItem := &i.Tail[j]
+	for j := 0; j < len(i.Children); j++ {
+		curItem := &i.Children[j]
 
 		if curItem != nil {
 			iteratee(*curItem, j)
@@ -198,7 +198,7 @@ func _toLastItemInStack(root *item, stack *PositionStack, iteratee TreeIteratee,
 	if stack.GetLast().Depth == count {
 		iteratee(root)
 	} else {
-		_toLastItemInStack(root.Tail[stack.GetRow(count)], stack, iteratee, count+1)
+		_toLastItemInStack(root.Children[stack.GetRow(count)], stack, iteratee, count+1)
 	}
 }
 
@@ -206,7 +206,7 @@ func _toLastItemInStack(root *item, stack *PositionStack, iteratee TreeIteratee,
 // printing to screen.
 func TreeMap(i *item, m map[int]*item) {
 	if !i.IsLeaf() {
-		for _, t := range i.Tail {
+		for _, t := range i.Children {
 			m[len(m)] = t
 			TreeMap(t, m)
 		}

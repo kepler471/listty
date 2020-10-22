@@ -26,8 +26,8 @@ func parseTxt(filename string) *item {
 	s := string(f)
 	lines := strings.Split(s, nextItem)
 	root := item{
-		Home: true,
-		Head: strings.TrimSpace(strings.TrimSuffix(path.Base(filename), ".txt")),
+		Root: true,
+		Text: strings.TrimSpace(strings.TrimSuffix(path.Base(filename), ".txt")),
 	}
 	splitAndSearch(&root, -1, lines)
 	return &root
@@ -46,14 +46,14 @@ func splitAndSearch(i *item, depth int, lines []string) {
 			line := item{
 				Parent: i,
 				// TODO: add single whitespace at line end
-				Head: strings.TrimSpace(l),
+				Text: strings.TrimSpace(l),
 			}
-			i.Tail = append(i.Tail, &line)
+			i.Children = append(i.Children, &line)
 		}
 	}
 	// splits recorded the indices at which to divide lines, and the function
 	// is then called on each of these subgroups, to search the next depth level.
-	for n, t := range i.Tail {
+	for n, t := range i.Children {
 		if splits[n] == splits[len(splits)-1] {
 			splitAndSearch(t, depth, lines[splits[n]:])
 		} else {
@@ -83,7 +83,7 @@ func treeToBytes(tree *item) *[]byte {
 
 	// purposely ignore root node, as it is readonly
 	treeIterator(tree, 0, func(i *item, depth int) {
-		bytes = append(bytes, []byte(formattedString(i.Head, depth))...)
+		bytes = append(bytes, []byte(formattedString(i.Text, depth))...)
 	})
 
 	return &bytes

@@ -51,11 +51,11 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		if ev.Modifiers() == 1 {
 			switch {
 			case c.x == 0:
-				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: " "}, c.i.Locate())
-			case len(c.i.Tail) > 0:
-				c.i = c.i.Tail[0].AddSibling(&item{Parent: c.i, Head: " "}, 0)
-			case len(c.i.Tail) == 0:
-				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: " "}, c.i.Locate()+1)
+				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Text: " "}, c.i.Locate())
+			case len(c.i.Children) > 0:
+				c.i = c.i.Children[0].AddSibling(&item{Parent: c.i, Text: " "}, 0)
+			case len(c.i.Children) == 0:
+				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Text: " "}, c.i.Locate()+1)
 			}
 			c.ResetX()
 			return // to maintain editing state
@@ -88,7 +88,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 			return
 		}
 
-		c.x = len(c.i.Head) - 1
+		c.x = len(c.i.Text) - 1
 
 	case tcell.KeyLeft:
 		if c.x > 0 {
@@ -100,7 +100,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		}
 
 	case tcell.KeyRight:
-		if c.x < len(c.i.Head)-1 {
+		if c.x < len(c.i.Text)-1 {
 			c.x++
 		}
 
@@ -109,12 +109,12 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		}
 
 	case tcell.KeyRune:
-		c.i.Head = c.i.Head[:c.x] + string(ev.Rune()) + c.i.Head[c.x:]
+		c.i.Text = c.i.Text[:c.x] + string(ev.Rune()) + c.i.Text[c.x:]
 		c.x++
 
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		if c.x != 0 {
-			c.i.Head = c.i.Head[:c.x-1] + c.i.Head[c.x:]
+			c.i.Text = c.i.Text[:c.x-1] + c.i.Text[c.x:]
 			c.x--
 		}
 
@@ -138,10 +138,10 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 		if ev.Modifiers() == 1 {
-			if len(c.i.Tail) > 0 {
-				c.i = c.i.Tail[0].AddSibling(&item{Parent: c.i, Head: " "}, 0)
+			if len(c.i.Children) > 0 {
+				c.i = c.i.Children[0].AddSibling(&item{Parent: c.i, Text: " "}, 0)
 			} else {
-				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Head: " "}, c.i.Locate()+1)
+				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Text: " "}, c.i.Locate()+1)
 			}
 		}
 
@@ -165,7 +165,6 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		}
 		c.Down()
 
-	//Shift - Left/Right used for indentation? Try it out
 	case tcell.KeyLeft:
 		if ev.Modifiers() == 2 {
 			// Increase scope to parent of current top level item (dive out)
@@ -185,7 +184,7 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		if ev.Modifiers() == 2 {
 			// Set selected item as top level item (dive in)
 			// For now, limit to non-leaf items, as unsure how app handles for empty tails
-			if len(c.i.Tail) != 0 {
+			if len(c.i.Children) != 0 {
 				local = c.i
 			}
 			return

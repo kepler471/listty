@@ -103,25 +103,25 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, r rune) {
 func drawInfo(s tcell.Screen, c *Cursor, local *item) {
 	width, _ := s.Size()
 	// Info bar
-	emitStr(s, lpad, fily, black, "File: "+local.Head)
+	emitStr(s, lpad, fily, black, "File: "+local.Text)
 	emitStr(s, lpad, pthy, black, "Item path: "+strings.Join(c.i.Path(), " > "))
 
 	// Info box
 	drawBox(s, width-boxl, box0, width-boxr, boxy, white, ' ')
 	emitStr(s, width-(boxl-boxr), exit, white, "Press Ctrl-Q to exit")
 	emitStr(s, width-(boxl-boxr), save, white, "Press Ctrl-S to save")
-	emitStr(s, width-(boxl-boxr), crsr, white, fmt.Sprintf(crsfmt, c.x, c.y, string(c.i.Head[c.x])))
+	emitStr(s, width-(boxl-boxr), crsr, white, fmt.Sprintf(crsfmt, c.x, c.y, string(c.i.Text[c.x])))
 	emitStr(s, width-(boxl-boxr), keys, white, fmt.Sprintf(keyfmt, c.lks))
 	emitStr(s, width-(boxl-boxr), mods, white, fmt.Sprintf(modfmt, c.mks))
 
 }
 
 func (i *item) Plot(s tcell.Screen, m map[*item]int, style tcell.Style) {
-	if len(i.Tail) > 0 {
-		for _, t := range i.Tail {
+	if len(i.Children) > 0 {
+		for _, t := range i.Children {
 			depth := len(t.Path()) - 1
 			m[t]++
-			emitStr(s, 5, 5+m[t], style, strings.Repeat("\t", depth)+t.Head)
+			emitStr(s, 5, 5+m[t], style, strings.Repeat("\t", depth)+t.Text)
 			t.Plot(s, m, style)
 		}
 	}

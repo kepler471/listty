@@ -16,15 +16,15 @@ func main() {
 	c := Cursor{
 		x:      0,
 		y:      0,
-		i:      root.Tail[0],
+		i:      root.Children[0],
 		buffer: "",
 		m:      EditMode(false), // Open listty with edit mode off
 	}
 
 	for {
 		// Pad item heads to give room for cursor
-		if c.i.Head == "" || string(c.i.Head[len(c.i.Head)-1]) != " " {
-			c.i.Head += " "
+		if c.i.Text == "" || string(c.i.Text[len(c.i.Text)-1]) != " " {
+			c.i.Text += " "
 		}
 
 		s.Clear() // unsure how tcell Clear works
@@ -36,7 +36,7 @@ func main() {
 
 		for row := 0; row < len(m); row++ {
 			f[row] = tabx * (len(m[row].PathTo(local)) - 1)
-			emitStr(s, lpad, tity+row, black, strings.Repeat(" ", f[row])+m[row].Head)
+			emitStr(s, lpad, tity+row, black, strings.Repeat(" ", f[row])+m[row].Text)
 
 			if m[row] == c.i {
 				c.y = row
@@ -48,7 +48,7 @@ func main() {
 			s.ShowCursor(5+f[c.y]+c.x, 3+c.y)
 		} else {
 			s.HideCursor()
-			emitStr(s, 5+f[c.y], 3+c.y, white, c.i.Head)
+			emitStr(s, 5+f[c.y], 3+c.y, white, c.i.Text)
 		}
 
 		drawInfo(s, &c, local)
