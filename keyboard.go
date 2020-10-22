@@ -30,11 +30,11 @@ func changeMode(c *Cursor) error {
 	return nil
 }
 
-func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
+func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) *item {
 	if c.m {
-		handleEdit(ev, s, c, local)
+		return handleEdit(ev, s, c, local)
 	} else {
-		handleSelect(ev, s, c, local)
+		return handleSelect(ev, s, c, local)
 	}
 }
 
@@ -42,7 +42,7 @@ func handleEventKey(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) 
 // Text editing is handled in a naive manner, writing directly to the item head,
 // and moving the cursor as an index of the head string, c.x. c.x will point to
 // the position
-func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
+func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) *item {
 	switch ev.Key() {
 	// TODO: add some comments describing key actions
 	case tcell.KeyEnter:
@@ -58,7 +58,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 				c.i = c.i.AddSibling(&item{Parent: c.i.Parent, Text: " "}, c.i.Locate()+1)
 			}
 			c.ResetX()
-			return // to maintain editing state
+			return local // to maintain editing state
 
 		}
 		_ = changeMode(c)
@@ -71,7 +71,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	case tcell.KeyUp:
 		if ev.Modifiers() == 1 {
 			c.i.MoveUp()
-			return
+			return local
 		}
 
 		c.ResetX()
@@ -85,7 +85,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	case tcell.KeyDown:
 		if ev.Modifiers() == 1 {
 			c.i.MoveDown()
-			return
+			return local
 		}
 
 		c.x = len(c.i.Text) - 1
@@ -131,10 +131,12 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 		s.Fini()
 		os.Exit(0)
 	}
+
+	return local
 }
 
 // handleSelect controls the keyboard actions when not in EditMode
-func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
+func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) *item {
 	switch ev.Key() {
 	case tcell.KeyEnter:
 		if ev.Modifiers() == 1 {
@@ -154,24 +156,25 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 	case tcell.KeyUp:
 		if ev.Modifiers() == 1 {
 			c.i.MoveUp()
-			return
+			return local
 		}
 		c.Up()
 
 	case tcell.KeyDown:
 		if ev.Modifiers() == 1 {
 			c.i.MoveDown()
-			return
+			return local
 		}
 		c.Down()
 
 	case tcell.KeyLeft:
 		if ev.Modifiers() == 2 {
 			// Increase scope to parent of current top level item (dive out)
-			if c.i.Parent != nil {
-				local = c.i.Parent
+			if local.Parent != nil {
+				local = local.Parent
+				c.i = c.i.Parent.Children[0]
 			}
-			return
+			return local
 		}
 
 		if ev.Modifiers() == 1 {
@@ -186,8 +189,9 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 			// For now, limit to non-leaf items, as unsure how app handles for empty tails
 			if len(c.i.Children) != 0 {
 				local = c.i
+				c.i = c.i.Children[0]
 			}
-			return
+			return local
 		}
 
 		if ev.Modifiers() == 1 {
@@ -227,4 +231,6 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor, local *item) {
 			_ = changeMode(c)
 		}
 	}
+
+	return local
 }
