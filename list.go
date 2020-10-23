@@ -209,7 +209,21 @@ func TreeMap(i *Item, m map[int]*Item) {
 	if !i.IsLeaf() {
 		for _, t := range i.Children {
 			m[len(m)] = t
-			TreeMap(t, m)
+			if !t.Collapsed {
+				TreeMap(t, m)
+			}
 		}
 	}
+}
+
+func (i *Item) Collapse() {
+	i.Collapsed = true
+}
+
+func (i *Item) Expand() {
+	i.Collapsed = false
+}
+
+func (i *Item) ToggleCollapse() {
+	i.Collapsed = !i.Collapsed
 }

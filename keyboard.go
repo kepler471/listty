@@ -154,9 +154,10 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor) {
 
 		if ev.Modifiers() == 1 {
 			c.i.Unindent()
+			return
 		}
 
-		// Collapse selected item
+		c.i.Collapse()
 
 	case tcell.KeyRight:
 		if ev.Modifiers() == 2 {
@@ -170,9 +171,10 @@ func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor) {
 
 		if ev.Modifiers() == 1 {
 			c.i.Indent()
+			return
 		}
 
-		// Expand selected item
+		c.i.Expand()
 
 	case tcell.KeyTab:
 		c.i.Indent()
