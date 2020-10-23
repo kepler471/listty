@@ -13,8 +13,8 @@ const (
 	indent   = "\t"
 )
 
-// parseTxt creates a item tree structure from a txt, and returns the root item
-func parseTxt(filename string) *item {
+// parseTxt creates a Item tree structure from a txt, and returns the root Item
+func parseTxt(filename string) *Item {
 	if !strings.HasSuffix(filename, ".txt") {
 		filename += ".txt"
 	}
@@ -25,7 +25,7 @@ func parseTxt(filename string) *item {
 	}
 	s := string(f)
 	lines := strings.Split(s, nextItem)
-	root := item{
+	root := Item{
 		Root: true,
 		Text: strings.TrimSpace(strings.TrimSuffix(path.Base(filename), ".txt")),
 	}
@@ -33,17 +33,17 @@ func parseTxt(filename string) *item {
 	return &root
 }
 
-// splitAndSearch creates a tree structure on a given item i, by searching for
+// splitAndSearch creates a tree structure on a given Item i, by searching for
 // indentations in lines of text. It will recursively search on all direct children
 // of i, with subgroups of the original set of lines.
-func splitAndSearch(i *item, depth int, lines []string) {
+func splitAndSearch(i *Item, depth int, lines []string) {
 	depth++
 	var splits []int
 	for n, l := range lines {
 		d := strings.Count(l, indent)
 		if d == depth {
 			splits = append(splits, n)
-			line := item{
+			line := Item{
 				Parent: i,
 				// TODO: add single whitespace at line end
 				Text: strings.TrimSpace(l),
@@ -68,9 +68,9 @@ const (
 	PREFIX      = ""
 )
 
-type ItemIteratee = func(child *item, depth int)
+type ItemIteratee = func(child *Item, depth int)
 
-func treeToTxt(tree *item, fileName string) {
+func treeToTxt(tree *Item, fileName string) {
 	err := ioutil.WriteFile(fileName+".txt", *treeToBytes(tree), 0644)
 
 	if err != nil {
@@ -78,19 +78,19 @@ func treeToTxt(tree *item, fileName string) {
 	}
 }
 
-func treeToBytes(tree *item) *[]byte {
+func treeToBytes(tree *Item) *[]byte {
 	var bytes []byte
 
 	// purposely ignore root node, as it is readonly
-	treeIterator(tree, 0, func(i *item, depth int) {
+	treeIterator(tree, 0, func(i *Item, depth int) {
 		bytes = append(bytes, []byte(formattedString(i.Text, depth))...)
 	})
 
 	return &bytes
 }
 
-func treeIterator(i *item, depth int, iteratee ItemIteratee) {
-	i.ForEachChild(func(child *item, _ int) {
+func treeIterator(i *Item, depth int, iteratee ItemIteratee) {
+	i.ForEachChild(func(child *Item, _ int) {
 		iteratee(child, depth)
 		if !child.IsLeaf() {
 			treeIterator(child, depth+1, iteratee)

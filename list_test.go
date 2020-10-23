@@ -5,10 +5,10 @@ import (
 )
 
 func TestItem_InsertAt(t *testing.T) {
-	notes := item{Root: true, Text: "Homepage"}
+	notes := Item{Root: true, Text: "Homepage"}
 	ch := []string{"£", "$", "%", "^", "&"}
 	for _, c := range ch {
-		notes.Children = append(notes.Children, &item{Parent: &notes, Text: c})
+		notes.Children = append(notes.Children, &Item{Parent: &notes, Text: c})
 	}
 	index := 0
 	t.Logf("Starting slice has %v items", len(notes.Children))
@@ -17,23 +17,23 @@ func TestItem_InsertAt(t *testing.T) {
 	}
 	t.Logf("Check `£`.Locate() = 0: %v", notes.Children[0].Locate())
 	note := notes.Children[index]
-	if len(append(note.Parent.Children, &item{})) != len(note.Parent.Children)+1 {
-		t.Errorf(`note.Parent.Tail, item{})) != len(note.Parent.Tail) +1`)
+	if len(append(note.Parent.Children, &Item{})) != len(note.Parent.Children)+1 {
+		t.Errorf(`note.Parent.Tail, Item{})) != len(note.Parent.Tail) +1`)
 	}
-	asterix := item{Text: "*", Parent: note.Parent}
+	asterix := Item{Text: "*", Parent: note.Parent}
 	tail := append(note.Parent.Children, &asterix)
 	index += 1
-	t.Logf("Appended new item to note.Parent.Tail, is now %v items long", len(tail))
+	t.Logf("Appended new Item to note.Parent.Tail, is now %v items long", len(tail))
 	t.Logf("Post append: %v", tail)
 	copy(tail[index+1:], tail[index:])
 	t.Logf("Post copy: %v", tail)
 	tail[index] = &asterix
 	t.Logf("Post assign: %v", tail)
 
-	t.Log(`// Now repeat by func newItem(i *item) {...func (i *item) AddSibling(j *item, index int) {}}`)
-	notes2 := item{Root: true, Text: "Homepage"}
+	t.Log(`// Now repeat by func newItem(i *Item) {...func (i *Item) AddSibling(j *Item, index int) {}}`)
+	notes2 := Item{Root: true, Text: "Homepage"}
 	for _, c := range ch {
-		notes2.Children = append(notes2.Children, &item{Parent: &notes2, Text: c})
+		notes2.Children = append(notes2.Children, &Item{Parent: &notes2, Text: c})
 	}
 	t.Log(`Run newItem(&notes2.Tail[3])`)
 	preLen := len(notes2.Children)

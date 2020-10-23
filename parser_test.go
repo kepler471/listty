@@ -13,7 +13,7 @@ func TestParseTxt3Long(t *testing.T) {
 }
 func Test_TreeToBytes(t *testing.T) {
 	ExpectedStr := "- £\n\t- a\n\t\t- d\n\t\t- e\n\t\t- f\n\t- b\n\t- c\n- $\n- %\n"
-	Root := item{
+	Root := Item{
 		Root:     true,
 		Parent:   nil,
 		Text:     "ROOT_NODE",
@@ -26,9 +26,9 @@ func Test_TreeToBytes(t *testing.T) {
 
 	// create a nested structure
 	for j := 0; j < len(depth0); j++ {
-		Root.Children = append(Root.Children, &item{Parent: &Root, Text: depth0[j], Root: false})
-		Root.Children[0].Children = append(Root.Children[0].Children, &item{Parent: Root.Children[0], Text: depth1[j], Root: false})
-		Root.Children[0].Children[0].Children = append(Root.Children[0].Children[0].Children, &item{Parent: Root.Children[0].Children[0], Text: depth2[j], Root: false})
+		Root.Children = append(Root.Children, &Item{Parent: &Root, Text: depth0[j], Root: false})
+		Root.Children[0].Children = append(Root.Children[0].Children, &Item{Parent: Root.Children[0], Text: depth1[j], Root: false})
+		Root.Children[0].Children[0].Children = append(Root.Children[0].Children[0].Children, &Item{Parent: Root.Children[0].Children[0], Text: depth2[j], Root: false})
 	}
 
 	treeByteArray := *treeToBytes(&Root)

@@ -1,22 +1,32 @@
 package main
 
+// Cursor maintains the state of the view of the Item tree structure
 type Cursor struct {
-	x      int
-	y      int
-	i      *item
-	buffer string
-	m      EditMode
-	lks    string
-	mks    string
-	// TODO: compose item with cursor?
+	x        int
+	y        int
+	i        *Item
+	root     *Item
+	local    *Item
+	buffer   string
+	editMode bool
+	lks      string
+	mks      string
+	m        map[int]*Item
+	f        map[int]int
+	// TODO: compose Item with cursor?
 	// 	makes changes globally and test.
-	//*item
+	//*Item
 }
 
-func NewCursor(i *item) Cursor {
-	return Cursor{
-		i: i.Children[0],
-		m: EditMode(false),
+func NewCursor(i *Item) *Cursor {
+	m := make(map[int]*Item)
+	f := make(map[int]int)
+	return &Cursor{
+		i:     i.Children[0],
+		root:  i,
+		local: i,
+		m:     m,
+		f:     f,
 	}
 }
 
@@ -24,7 +34,7 @@ func NewCursor(i *item) Cursor {
 // There may be circumstances where the cursor will need to move after
 //	these actions (thinking mainly about when collapsibility is added.
 
-// Down moves cursor down a single row, and selects the correct item.
+// Down moves cursor down a single row, and selects the correct Item.
 func (c *Cursor) Down() {
 	if len(c.i.Children) > 0 {
 		c.i = c.i.Children[0]
@@ -35,9 +45,9 @@ func (c *Cursor) Down() {
 	c.i = c.SearchDown(c.i)
 }
 
-// searchDown finds the next item in an ordered tree. If it cannot
-// find a suitable next item, it returns the original item.
-func (c *Cursor) SearchDown(i *item) *item {
+// searchDown finds the next Item in an ordered tree. If it cannot
+// find a suitable next Item, it returns the original Item.
+func (c *Cursor) SearchDown(i *Item) *Item {
 	index := i.Locate()
 	if len(i.Parent.Children) >= index+2 { // Can it move along parent's tail?
 		i = i.Parent.Children[index+1]
@@ -65,13 +75,13 @@ func (c *Cursor) Up() {
 	c.i = c.SearchUp(c.i.Parent.Children[index-1]) // search on preceding sibling
 }
 
-func (c *Cursor) SearchUp(i *item) *item {
+func (c *Cursor) SearchUp(i *Item) *Item {
 	if len(i.Children) == 0 {
 		c.ResetX()
 		c.y--
 		return i
 	}
-	return c.SearchUp(i.Children[len(i.Children)-1]) // recurse on the last item in the tail
+	return c.SearchUp(i.Children[len(i.Children)-1]) // recurse on the last Item in the tail
 }
 
 func (c *Cursor) ResetX() {
@@ -89,6 +99,11 @@ func (c *Cursor) SetBuffer() {
 func (c *Cursor) UnsetBuffer() {
 	c.i.Text = c.buffer
 	c.ClearBuffer()
+}
+
+func changeMode(c *Cursor) error {
+	c.editMode = !c.editMode
+	return nil
 }
 
 // TODO: add c.x inc/dec methods

@@ -100,7 +100,7 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, r rune) {
 	}
 }
 
-func drawInfo(s tcell.Screen, c *Cursor, local *item) {
+func drawInfo(s tcell.Screen, c *Cursor, local *Item) {
 	width, _ := s.Size()
 	// Info bar
 	emitStr(s, lpad, fily, black, "File: "+local.Text)
@@ -113,10 +113,9 @@ func drawInfo(s tcell.Screen, c *Cursor, local *item) {
 	emitStr(s, width-(boxl-boxr), crsr, white, fmt.Sprintf(crsfmt, c.x, c.y, string(c.i.Text[c.x])))
 	emitStr(s, width-(boxl-boxr), keys, white, fmt.Sprintf(keyfmt, c.lks))
 	emitStr(s, width-(boxl-boxr), mods, white, fmt.Sprintf(modfmt, c.mks))
-
 }
 
-func (i *item) Plot(s tcell.Screen, m map[*item]int, style tcell.Style) {
+func (i *Item) Plot(s tcell.Screen, m map[*Item]int, style tcell.Style) {
 	if len(i.Children) > 0 {
 		for _, t := range i.Children {
 			depth := len(t.Path()) - 1

@@ -1,28 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"strconv"
 	"strings"
 )
 
 func main() {
+
 	s := startup()
 
-	root := parseTxt("text/example")
-	// local will be the top level item on view in the application.
-	local := root
-
-	c := Cursor{
-		x:      0,
-		y:      0,
-		i:      root.Children[0],
-		buffer: "",
-		m:      EditMode(false), // Open listty with edit mode off
-	}
+	c := NewCursor(parseTxt("text/example"))
 
 	for {
-		// Pad item heads to give room for cursor
+		// Pad Item heads to give room for cursor
 		if c.i.Text == "" || string(c.i.Text[len(c.i.Text)-1]) != " " {
 			c.i.Text += " "
 		}
@@ -30,28 +22,28 @@ func main() {
 		s.Clear() // unsure how tcell Clear works
 		// test further if any chars are deleted or left after deletion
 
-		m := make(map[int]*item)
-		f := make(map[int]int) // track indentations for cursor
-		TreeMap(local, m)
+		c.m = make(map[int]*Item)
+		TreeMap(c.local, c.m)
 
-		for row := 0; row < len(m); row++ {
-			f[row] = tabx * (len(m[row].PathTo(local)) - 1)
-			emitStr(s, lpad, tity+row, black, strings.Repeat(" ", f[row])+m[row].Text)
+		for row := 0; row < len(c.m); row++ {
+			c.f[row] = tabx * (len(c.m[row].PathTo(c.local)) - 1)
+			emitStr(s, lpad, tity+row, black, strings.Repeat(" ", c.f[row])+c.m[row].Text)
 
-			if m[row] == c.i {
+			if c.m[row] == c.i {
 				c.y = row
 			}
 		}
 
+		fmt.Println("Fields varibles 2", c.m, c.f)
 		// Cursor
-		if c.m {
-			s.ShowCursor(5+f[c.y]+c.x, 3+c.y)
+		if c.editMode {
+			s.ShowCursor(lpad+c.f[c.y]+c.x, tity+c.y)
 		} else {
 			s.HideCursor()
-			emitStr(s, 5+f[c.y], 3+c.y, white, c.i.Text)
+			emitStr(s, lpad+c.f[c.y], tity+c.y, white, c.i.Text)
 		}
 
-		drawInfo(s, &c, local)
+		drawInfo(s, c, c.local)
 
 		s.Show()
 
@@ -62,7 +54,7 @@ func main() {
 		case *tcell.EventKey:
 			c.lks = ev.Name()
 			c.mks = strconv.Itoa(int(ev.Modifiers()))
-			handleEventKey(ev, s, &c, local)
+			handleEventKey(ev, s, c)
 		}
 	}
 }
