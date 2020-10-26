@@ -27,6 +27,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor) {
 		c.ClearBuffer()
 
 		if ev.Modifiers() == 1 {
+			// TODO: move this decision to list.go
 			switch {
 			case c.x == 0:
 				c.i = c.i.AddSibling(&Item{Parent: c.i.Parent, Text: " "}, c.i.Locate())
@@ -115,6 +116,7 @@ func handleEdit(ev *tcell.EventKey, s tcell.Screen, c *Cursor) {
 func handleSelect(ev *tcell.EventKey, s tcell.Screen, c *Cursor) {
 	switch ev.Key() {
 	case tcell.KeyEnter:
+		//TODO: move this decision to list.go
 		if ev.Modifiers() == 1 {
 			if len(c.i.Children) > 0 {
 				c.i = c.i.Children[0].AddSibling(&Item{Parent: c.i, Text: " "}, 0)
