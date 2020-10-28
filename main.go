@@ -45,6 +45,9 @@ func main() {
 
 		drawInfo(s, c, c.local)
 
+		// TODO: update only the elements on the screen that would be changed.
+		// may help to use views, or text cells.
+		// see implementations in tcell and tview
 		s.Show()
 
 		// Events
