@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"strconv"
 	"strings"
@@ -34,7 +33,6 @@ func main() {
 			}
 		}
 
-		fmt.Println("Fields varibles 2", c.m, c.f)
 		// Cursor
 		if c.editMode {
 			s.ShowCursor(lpad+c.f[c.y]+c.x, tity+c.y)
